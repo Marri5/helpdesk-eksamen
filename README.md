@@ -1,101 +1,106 @@
-# Helpdesk System
+# HelpDesk System
 
-A comprehensive helpdesk system with ticket management, user administration, and responsive UI.
+A complete helpdesk system inspired by Spiceworks, built with the MERN stack (MongoDB, Express, React, Node.js).
 
 ## Features
 
-- User authentication and role-based access control
-- Ticket creation and management
-- Comments on tickets for user-admin communication
-- Ticket history tracking
-- Status and priority management
-- Statistics for administrators
-- Responsive design that works on mobile and desktop
+- User Authentication (Login/Register)
+- Role-based Access Control (User/Admin)
+- Ticket Creation and Management
+- Status Tracking
+- Priority Setting
+- Category Assignment
+- Comment System
+- Admin Dashboard with Statistics
+- Responsive UI
+
+## Tech Stack
+
+### Backend
+- Node.js with Express
+- MongoDB for database
+- JWT for authentication
+- RESTful API architecture
+- MVC pattern
+
+### Frontend
+- React with hooks and context API
+- React Router for routing
+- Axios for API requests
+- Bootstrap for UI
+
+## Setup Instructions
+
+### Prerequisites
+- Node.js
+- MongoDB
+- npm or yarn
+
+### Backend Setup
+1. Navigate to the backend directory:
+   ```
+   cd backend
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Create a `.env` file in the backend directory with the following variables:
+   ```
+   PORT=5000
+   MONGO_URI=mongodb://10.12.3.88:27017/helpdesk
+   JWT_SECRET=helpdeskapp_secret_key
+   JWT_EXPIRE=7d
+   COOKIE_EXPIRE=7
+   NODE_ENV=development
+   ```
+
+4. Start the server:
+   ```
+   npm run dev
+   ```
+
+### Frontend Setup
+1. Navigate to the frontend directory:
+   ```
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Start the React app:
+   ```
+   npm start
+   ```
 
 ## API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user
+- `POST /api/auth/login` - Login a user
+- `GET /api/auth/me` - Get current user
 - `GET /api/auth/logout` - Logout user
-- `GET /api/auth/me` - Get current logged in user
-
-### Users (Admin only)
-- `GET /api/users` - Get all users
-- `GET /api/users/:id` - Get single user
-- `POST /api/users` - Create user
-- `PUT /api/users/:id` - Update user
-- `DELETE /api/users/:id` - Delete user
 
 ### Tickets
-- `GET /api/tickets` - Get all tickets (admin sees all, users see their own)
-- `GET /api/tickets/:id` - Get single ticket
-- `POST /api/tickets` - Create ticket
-- `PUT /api/tickets/:id` - Update ticket
-- `DELETE /api/tickets/:id` - Delete ticket
-- `POST /api/tickets/:id/comments` - Add comment to ticket
+- `GET /api/tickets` - Get all tickets
+- `GET /api/tickets/:id` - Get a single ticket
+- `POST /api/tickets` - Create a new ticket
+- `PUT /api/tickets/:id` - Update a ticket
+- `DELETE /api/tickets/:id` - Delete a ticket
+- `POST /api/tickets/:id/comments` - Add a comment to a ticket
 - `GET /api/tickets/stats` - Get ticket statistics (admin only)
 
-## Setup Instructions
+### Users
+- `GET /api/users` - Get all users (admin only)
+- `GET /api/users/:id` - Get a user by ID (admin only)
+- `PUT /api/users/:id` - Update a user (admin only)
+- `DELETE /api/users/:id` - Delete a user (admin only)
 
-### Server Setup
+## License
 
-1. Navigate to the server directory:
-   ```
-   cd server
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Create `.env` file with the following variables:
-   ```
-   NODE_ENV=development
-   PORT=5000
-   MONGO_URI=mongodb://10.12.3.88:27017/helpdesk
-   JWT_SECRET=your_jwt_secret
-   JWT_EXPIRE=7d
-   CLIENT_URL=http://localhost:3000
-   BACKEND_URL=http://10.12.3.77:5000
-   ```
-
-4. Seed the database with initial data:
-   ```
-   npm run seed
-   ```
-
-5. Start the server:
-   ```
-   npm run dev
-   ```
-
-### Client Setup
-
-1. Navigate to the client directory:
-   ```
-   cd client
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Start the client:
-   ```
-   npm start
-   ```
-
-## Default Users
-
-After running the seeder, you can use these credentials:
-
-- Admin User:
-  - Email: admin@example.com
-  - Password: password123
-
-- Regular User:
-  - Email: user@example.com
-  - Password: password123
+This project is licensed under the MIT License.
