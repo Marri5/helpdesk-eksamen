@@ -1,99 +1,19 @@
-/* Global Styles */
-:root {
-  --primary-color: #17a2b8;
-  --dark-color: #343a40;
-  --light-color: #f4f4f4;
-  --danger-color: #dc3545;
-  --success-color: #28a745;
-}
+/* Global Styles will be handled by Tailwind */
+/* Most styles are commented out since we're using Tailwind CSS */
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
+/* Keep only essential styles that aren't covered by Tailwind */
 body {
   font-family: 'Raleway', sans-serif;
-  font-size: 1rem;
-  line-height: 1.6;
-  background-color: #fff;
-  color: #333;
-}
-
-a {
-  color: var(--primary-color);
-  text-decoration: none;
-}
-
-a:hover {
-  color: #0c7285;
-}
-
-ul {
-  list-style: none;
 }
 
 /* Landing Page */
 .landing {
   position: relative;
-  background: url('./img/showcase.jpg') no-repeat center center/cover;
+  background-color: #1F2937;
   height: 90vh;
 }
 
-.landing::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-.landing-inner {
-  color: #fff;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  width: 80%;
-  margin: auto;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-}
-
-.landing h1 {
-  font-size: 3.5rem;
-  margin-bottom: 1rem;
-}
-
-.landing .lead {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.landing .buttons {
-  margin-top: 1rem;
-}
-
-.landing .btn {
-  margin: 0 0.5rem;
-}
-
-/* Dashboard */
-.ticket-list .card {
-  transition: all 0.3s ease;
-}
-
-.ticket-list .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* Alerts */
+/* Alerts wrapper for positioning */
 .alert-wrapper {
   position: fixed;
   top: 70px;
@@ -102,63 +22,4 @@ ul {
   z-index: 9999;
 }
 
-.alert {
-  padding: 0.8rem;
-  margin: 1rem 0;
-  opacity: 0.9;
-  background: var(--light-color);
-  color: #333;
-  border-radius: 4px;
-}
-
-.alert-primary {
-  background: var(--primary-color);
-  color: #fff;
-}
-
-.alert-light {
-  background: var(--light-color);
-  color: #333;
-}
-
-.alert-dark {
-  background: var(--dark-color);
-  color: #fff;
-}
-
-.alert-danger {
-  background: var(--danger-color);
-  color: #fff;
-}
-
-.alert-success {
-  background: var(--success-color);
-  color: #fff;
-}
-
-.alert-white {
-  background: #fff;
-  color: #333;
-  border: #ccc solid 1px;
-}
-
-/* Comments */
-.comment-list .card {
-  margin-bottom: 1rem;
-  border-left: 3px solid var(--primary-color);
-}
-
-/* Responsive */
-@media (max-width: 700px) {
-  .hide-sm {
-    display: none;
-  }
-
-  .landing h1 {
-    font-size: 2.5rem;
-  }
-
-  .landing .lead {
-    font-size: 1rem;
-  }
-}
+/* Any custom animations not in Tailwind can stay here */

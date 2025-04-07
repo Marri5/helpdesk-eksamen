@@ -27,7 +27,7 @@ A complete helpdesk system inspired by Spiceworks, built with the MERN stack (Mo
 - React with hooks and context API
 - React Router for routing
 - Axios for API requests
-- Bootstrap for UI
+- TailwindCSS for UI styling
 
 ## Setup Instructions
 

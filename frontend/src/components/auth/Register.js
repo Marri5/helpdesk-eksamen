@@ -57,19 +57,23 @@ const Register = () => {
   };
 
   return (
-    <div className="container mt-5">
-      <div className="row">
-        <div className="col-md-6 m-auto">
-          <div className="card card-body">
-            <h1 className="text-center mb-3">
-              <i className="fas fa-user-plus"></i> Register
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-md mx-auto">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="py-4 px-6 bg-gray-50 border-b border-gray-200">
+            <h1 className="text-xl font-bold text-center">
+              <i className="fas fa-user-plus mr-2"></i> Register
             </h1>
+          </div>
+          <div className="p-6">
             <form onSubmit={onSubmit}>
-              <div className="form-group">
-                <label htmlFor="name">Name</label>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                  Name
+                </label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   id="name"
                   name="name"
                   placeholder="Enter Name"
@@ -78,11 +82,13 @@ const Register = () => {
                   required
                 />
               </div>
-              <div className="form-group">
-                <label htmlFor="email">Email</label>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+                  Email
+                </label>
                 <input
                   type="email"
-                  className="form-control"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   id="email"
                   name="email"
                   placeholder="Enter Email"
@@ -91,11 +97,13 @@ const Register = () => {
                   required
                 />
               </div>
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+                  Password
+                </label>
                 <input
                   type="password"
-                  className="form-control"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   id="password"
                   name="password"
                   placeholder="Create Password"
@@ -105,11 +113,13 @@ const Register = () => {
                   required
                 />
               </div>
-              <div className="form-group">
-                <label htmlFor="password2">Confirm Password</label>
+              <div className="mb-6">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password2">
+                  Confirm Password
+                </label>
                 <input
                   type="password"
-                  className="form-control"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                   id="password2"
                   name="password2"
                   placeholder="Confirm Password"
@@ -119,12 +129,15 @@ const Register = () => {
                   required
                 />
               </div>
-              <button type="submit" className="btn btn-primary btn-block">
+              <button
+                type="submit"
+                className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              >
                 Register
               </button>
             </form>
-            <p className="lead mt-4">
-              Already have an account? <Link to="/login">Login</Link>
+            <p className="mt-4 text-center">
+              Already have an account? <Link to="/login" className="text-primary hover:underline">Login</Link>
             </p>
           </div>
         </div>

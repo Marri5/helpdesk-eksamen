@@ -48,83 +48,61 @@ const AdminDashboard = () => {
   }, [setAlert]);
 
   return (
-    <div className="container">
-      <div className="row">
-        <div className="col-md-12">
-          <h1 className="my-4">
-            <i className="fas fa-user-shield"></i> Admin Dashboard
-          </h1>
-          <div className="bg-light p-4 mb-4 rounded">
-            <h2 className="text-primary">Welcome {user && user.name}</h2>
-            <p>Manage tickets and view statistics here.</p>
-          </div>
-
-          <h2 className="my-4">Ticket Statistics</h2>
-
-          {statLoading ? (
-            <div className="text-center">
-              <div className="spinner-border" role="status">
-                <span className="sr-only">Loading...</span>
-              </div>
-            </div>
-          ) : (
-            <div className="row">
-              <div className="col-md-3 mb-4">
-                <div className="card bg-primary text-white">
-                  <div className="card-body text-center">
-                    <h5 className="card-title">Total Tickets</h5>
-                    <h2>{stats.total}</h2>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-3 mb-4">
-                <div className="card bg-danger text-white">
-                  <div className="card-body text-center">
-                    <h5 className="card-title">Open</h5>
-                    <h2>{stats.open}</h2>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-3 mb-4">
-                <div className="card bg-warning text-white">
-                  <div className="card-body text-center">
-                    <h5 className="card-title">In Progress</h5>
-                    <h2>{stats.inProgress}</h2>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-3 mb-4">
-                <div className="card bg-success text-white">
-                  <div className="card-body text-center">
-                    <h5 className="card-title">Resolved</h5>
-                    <h2>{stats.resolved}</h2>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <h2 className="my-4">All Tickets</h2>
-
-          {loading ? (
-            <div className="text-center">
-              <div className="spinner-border" role="status">
-                <span className="sr-only">Loading...</span>
-              </div>
-            </div>
-          ) : tickets.length > 0 ? (
-            <div className="ticket-list">
-              {tickets.map((ticket) => (
-                <TicketItem key={ticket._id} ticket={ticket} isAdmin={true} />
-              ))}
-            </div>
-          ) : (
-            <div className="alert alert-info">
-              There are no tickets in the system yet.
-            </div>
-          )}
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-4 flex items-center">
+          <i className="fas fa-user-shield mr-2"></i> Admin Dashboard
+        </h1>
+        <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+          <h2 className="text-xl text-primary font-semibold mb-2">Welcome {user && user.name}</h2>
+          <p className="text-gray-600">Manage tickets and view statistics here.</p>
         </div>
       </div>
+
+      <h2 className="text-xl font-bold mb-4">Ticket Statistics</h2>
+
+      {statLoading ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-primary text-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-2">Total Tickets</h3>
+            <p className="text-3xl font-bold">{stats.total}</p>
+          </div>
+          <div className="bg-danger text-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-2">Open</h3>
+            <p className="text-3xl font-bold">{stats.open}</p>
+          </div>
+          <div className="bg-warning text-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-2">In Progress</h3>
+            <p className="text-3xl font-bold">{stats.inProgress}</p>
+          </div>
+          <div className="bg-success text-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-2">Resolved</h3>
+            <p className="text-3xl font-bold">{stats.resolved}</p>
+          </div>
+        </div>
+      )}
+
+      <h2 className="text-xl font-bold mb-4">All Tickets</h2>
+
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+        </div>
+      ) : tickets.length > 0 ? (
+        <div className="space-y-4">
+          {tickets.map((ticket) => (
+            <TicketItem key={ticket._id} ticket={ticket} isAdmin={true} />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded">
+          <p>There are no tickets in the system yet.</p>
+        </div>
+      )}
     </div>
   );
 };

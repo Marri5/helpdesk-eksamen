@@ -27,41 +27,37 @@ const UserDashboard = () => {
   }, [setAlert]);
 
   return (
-    <div className="container">
-      <div className="row">
-        <div className="col-md-12">
-          <h1 className="my-4">
-            <i className="fas fa-user"></i> User Dashboard
-          </h1>
-          <div className="bg-light p-4 mb-4 rounded">
-            <h2 className="text-primary">Welcome {user && user.name}</h2>
-            <p>You can submit new tickets and check the status of your tickets here.</p>
-            <Link to="/tickets/new" className="btn btn-primary my-1">
-              <i className="fas fa-plus"></i> Submit New Ticket
-            </Link>
-          </div>
-
-          <h2 className="my-4">Your Tickets</h2>
-
-          {loading ? (
-            <div className="text-center">
-              <div className="spinner-border" role="status">
-                <span className="sr-only">Loading...</span>
-              </div>
-            </div>
-          ) : tickets.length > 0 ? (
-            <div className="ticket-list">
-              {tickets.map((ticket) => (
-                <TicketItem key={ticket._id} ticket={ticket} />
-              ))}
-            </div>
-          ) : (
-            <div className="alert alert-info">
-              You don't have any tickets yet. Create a new one!
-            </div>
-          )}
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-4 flex items-center">
+          <i className="fas fa-user mr-2"></i> User Dashboard
+        </h1>
+        <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+          <h2 className="text-xl text-primary font-semibold mb-2">Welcome {user && user.name}</h2>
+          <p className="text-gray-600 mb-4">You can submit new tickets and check the status of your tickets here.</p>
+          <Link to="/tickets/new" className="btn btn-primary inline-flex items-center">
+            <i className="fas fa-plus mr-2"></i> Submit New Ticket
+          </Link>
         </div>
       </div>
+
+      <h2 className="text-xl font-bold mb-4">Your Tickets</h2>
+
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+        </div>
+      ) : tickets.length > 0 ? (
+        <div className="space-y-4">
+          {tickets.map((ticket) => (
+            <TicketItem key={ticket._id} ticket={ticket} />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded">
+          <p>You don't have any tickets yet. Create a new one!</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -74,189 +74,190 @@ const TicketDetails = () => {
   };
 
   // Status badge color
-  const getStatusBadgeColor = (status) => {
+  const getStatusColor = (status) => {
     switch (status) {
       case 'Open':
-        return 'danger';
+        return 'bg-danger';
       case 'Under arbeid':
-        return 'warning';
+        return 'bg-warning';
       case 'Løst':
-        return 'success';
+        return 'bg-success';
       default:
-        return 'secondary';
+        return 'bg-gray-500';
     }
   };
 
   // Priority badge color
-  const getPriorityBadgeColor = (priority) => {
+  const getPriorityColor = (priority) => {
     switch (priority) {
       case 'High':
-        return 'danger';
+        return 'bg-danger';
       case 'Medium':
-        return 'warning';
+        return 'bg-warning';
       case 'Low':
-        return 'info';
+        return 'bg-info';
       default:
-        return 'secondary';
+        return 'bg-gray-500';
     }
   };
 
   if (loading) {
     return (
-      <div className="container mt-5">
-        <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="sr-only">Loading...</span>
-          </div>
-        </div>
+      <div className="container mx-auto px-4 py-8 flex justify-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mt-5">
-      <div className="row">
-        <div className="col-md-12">
-          <div className="card mb-4">
-            <div className="card-header bg-primary text-white">
-              <h4 className="mb-0">{ticket.title}</h4>
-            </div>
-            <div className="card-body">
-              <div className="ticket-details mb-4">
-                <div className="row mb-2">
-                  <div className="col-md-6">
-                    <strong>Status:</strong>{' '}
-                    <span className={`badge badge-${getStatusBadgeColor(ticket.status)}`}>
-                      {ticket.status}
-                    </span>
-                  </div>
-                  <div className="col-md-6">
-                    <strong>Priority:</strong>{' '}
-                    <span className={`badge badge-${getPriorityBadgeColor(ticket.priority)}`}>
-                      {ticket.priority}
-                    </span>
-                  </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+          <div className="bg-primary text-white p-4">
+            <h2 className="text-xl font-bold">{ticket.title}</h2>
+          </div>
+          <div className="p-6">
+            <div className="mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                <div className="flex items-center">
+                  <span className="font-semibold mr-2">Status:</span>
+                  <span className={`${getStatusColor(ticket.status)} text-white text-xs px-2 py-1 rounded`}>
+                    {ticket.status}
+                  </span>
                 </div>
-                <div className="row mb-2">
-                  <div className="col-md-6">
-                    <strong>Category:</strong> {ticket.category}
-                  </div>
-                  <div className="col-md-6">
-                    <strong>Submitted By:</strong> {ticket.user && ticket.user.name}
-                  </div>
+                <div className="flex items-center">
+                  <span className="font-semibold mr-2">Priority:</span>
+                  <span className={`${getPriorityColor(ticket.priority)} text-white text-xs px-2 py-1 rounded`}>
+                    {ticket.priority}
+                  </span>
                 </div>
-                <div className="row mb-2">
-                  <div className="col-md-6">
-                    <strong>Created:</strong>{' '}
-                    <Moment format="YYYY-MM-DD HH:mm">{ticket.createdAt}</Moment>
-                  </div>
-                  <div className="col-md-6">
-                    <strong>Last Updated:</strong>{' '}
-                    <Moment format="YYYY-MM-DD HH:mm">{ticket.updatedAt}</Moment>
-                  </div>
-                </div>
-                <hr />
-                <h5>Description:</h5>
-                <p>{ticket.description}</p>
               </div>
-
-              {user && user.role === 'admin' && (
-                <div className="admin-controls mb-4">
-                  <h5>Admin Controls</h5>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <form onSubmit={onStatusChange}>
-                        <div className="form-group">
-                          <label>Change Status</label>
-                          <select
-                            className="form-control"
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                          >
-                            <option value="Open">Open</option>
-                            <option value="Under arbeid">Under arbeid</option>
-                            <option value="Løst">Løst</option>
-                          </select>
-                        </div>
-                        <button type="submit" className="btn btn-primary btn-sm">
-                          Update Status
-                        </button>
-                      </form>
-                    </div>
-                    <div className="col-md-6">
-                      <form onSubmit={onPriorityChange}>
-                        <div className="form-group">
-                          <label>Change Priority</label>
-                          <select
-                            className="form-control"
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value)}
-                          >
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                          </select>
-                        </div>
-                        <button type="submit" className="btn btn-primary btn-sm">
-                          Update Priority
-                        </button>
-                      </form>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                <div>
+                  <span className="font-semibold">Category:</span> {ticket.category}
                 </div>
-              )}
+                <div>
+                  <span className="font-semibold">Submitted By:</span> {ticket.user && ticket.user.name}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                <div>
+                  <span className="font-semibold">Created:</span>{' '}
+                  <Moment format="YYYY-MM-DD HH:mm">{ticket.createdAt}</Moment>
+                </div>
+                <div>
+                  <span className="font-semibold">Last Updated:</span>{' '}
+                  <Moment format="YYYY-MM-DD HH:mm">{ticket.updatedAt}</Moment>
+                </div>
+              </div>
+              <hr className="my-4 border-gray-200" />
+              <h3 className="text-lg font-semibold mb-2">Description:</h3>
+              <p className="text-gray-700">{ticket.description}</p>
+            </div>
 
-              <div className="comments-section">
-                <h5 className="mb-3">Comments ({ticket.comments.length})</h5>
-                <form onSubmit={onCommentSubmit} className="mb-4">
-                  <div className="form-group">
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      placeholder="Add a comment..."
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                    ></textarea>
-                  </div>
-                  <button type="submit" className="btn btn-primary">
-                    Post Comment
-                  </button>
-                </form>
+            {user && user.role === 'admin' && (
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <h3 className="text-lg font-semibold mb-4">Admin Controls</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <form onSubmit={onStatusChange} className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Change Status
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                      >
+                        <option value="Open">Open</option>
+                        <option value="Under arbeid">Under arbeid</option>
+                        <option value="Løst">Løst</option>
+                      </select>
+                    </div>
+                    <button 
+                      type="submit" 
+                      className="bg-primary text-white py-1 px-3 rounded text-sm hover:bg-blue-600"
+                    >
+                      Update Status
+                    </button>
+                  </form>
+                  <form onSubmit={onPriorityChange} className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Change Priority
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                        value={priority}
+                        onChange={(e) => setPriority(e.target.value)}
+                      >
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                      </select>
+                    </div>
+                    <button 
+                      type="submit" 
+                      className="bg-primary text-white py-1 px-3 rounded text-sm hover:bg-blue-600"
+                    >
+                      Update Priority
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
 
-                <div className="comment-list">
-                  {ticket.comments.length > 0 ? (
-                    ticket.comments.map((comment, index) => (
-                      <div key={index} className="card mb-3">
-                        <div className="card-body">
-                          <div className="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                              <strong>{comment.name}</strong>{' '}
-                              <span className="badge badge-info">{comment.role}</span>
-                            </div>
-                            <small className="text-muted">
-                              <Moment format="YYYY-MM-DD HH:mm">{comment.createdAt}</Moment>
-                            </small>
-                          </div>
-                          <p className="mb-0">{comment.text}</p>
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Comments ({ticket.comments.length})</h3>
+              <form onSubmit={onCommentSubmit} className="mb-6">
+                <div className="mb-3">
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    rows="3"
+                    placeholder="Add a comment..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                  ></textarea>
+                </div>
+                <button 
+                  type="submit" 
+                  className="bg-primary text-white py-2 px-4 rounded hover:bg-blue-600"
+                >
+                  Post Comment
+                </button>
+              </form>
+
+              <div className="space-y-4">
+                {ticket.comments.length > 0 ? (
+                  ticket.comments.map((comment, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-4 border-l-4 border-primary">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center">
+                          <span className="font-semibold mr-2">{comment.name}</span>
+                          <span className="bg-info text-white text-xs px-2 py-0.5 rounded">{comment.role}</span>
                         </div>
+                        <span className="text-sm text-gray-500">
+                          <Moment format="YYYY-MM-DD HH:mm">{comment.createdAt}</Moment>
+                        </span>
                       </div>
-                    ))
-                  ) : (
-                    <div className="alert alert-info">
-                      No comments yet. Be the first to comment!
+                      <p className="text-gray-700">{comment.text}</p>
                     </div>
-                  )}
-                </div>
+                  ))
+                ) : (
+                  <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded">
+                    <p>No comments yet. Be the first to comment!</p>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="card-footer">
-              <Link
-                to={user && user.role === 'admin' ? '/admin' : '/dashboard'}
-                className="btn btn-secondary"
-              >
-                Back to Dashboard
-              </Link>
-            </div>
+          </div>
+          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <Link
+              to={user && user.role === 'admin' ? '/admin' : '/dashboard'}
+              className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+            >
+              Back to Dashboard
+            </Link>
           </div>
         </div>
       </div>
