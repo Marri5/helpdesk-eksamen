@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
-// Components
 import Navbar from './components/layout/Navbar';
 import Landing from './components/layout/Landing';
 import Register from './components/auth/Register';
@@ -14,18 +13,14 @@ import TicketForm from './components/tickets/TicketForm';
 import TicketDetails from './components/tickets/TicketDetails';
 import NotFound from './components/layout/NotFound';
 
-// Context
 import { AuthProvider } from './context/AuthContext';
 import { AlertProvider } from './context/AlertContext';
 
-// Styles
 import './App.css';
 
-// Set base URL for API requests
 axios.defaults.baseURL = 'http://10.12.3.77:5000/api';
 axios.defaults.withCredentials = true;
 
-// Private route component
 const PrivateRoute = ({ element, allowedRoles }) => {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));

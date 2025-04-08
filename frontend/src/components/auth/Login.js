@@ -16,12 +16,10 @@ const Login = () => {
   const { email, password } = formData;
 
   useEffect(() => {
-    // Clear any existing errors when component mounts
     setError(null);
   }, [setError]);
 
   useEffect(() => {
-    // If authenticated, redirect based on role
     if (isAuthenticated) {
       if (user && user.role === 'admin') {
         navigate('/admin');
@@ -30,7 +28,6 @@ const Login = () => {
       }
     }
 
-    // If error, show alert
     if (error) {
       setAlert(error, 'danger');
     }

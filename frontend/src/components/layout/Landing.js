@@ -5,7 +5,6 @@ import { AuthContext } from '../../context/AuthContext';
 const Landing = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
 
-  // Redirect if logged in
   if (isAuthenticated) {
     return user.role === 'admin' ? (
       <Navigate to="/admin" />

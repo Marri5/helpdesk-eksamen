@@ -13,7 +13,6 @@ const { protect, authorize } = require('../middlewares/auth');
 
 const router = express.Router();
 
-// All routes below use the protect middleware
 router.use(protect);
 
 // @route   GET /api/tickets

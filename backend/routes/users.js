@@ -4,7 +4,6 @@ const { protect, authorize } = require('../middlewares/auth');
 
 const router = express.Router();
 
-// All routes below use the protect middleware and admin authorization
 router.use(protect);
 router.use(authorize('admin'));
 
@@ -63,7 +62,6 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    // Build user object
     const userFields = {};
     if (name) userFields.name = name;
     if (email) userFields.email = email;

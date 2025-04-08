@@ -10,7 +10,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load user from local storage on mount
   useEffect(() => {
     const loadUser = async () => {
       if (localStorage.token) {
@@ -37,7 +36,6 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  // Set auth token in headers
   const setAuthToken = (token) => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -46,7 +44,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Register user
   const register = async (formData) => {
     setLoading(true);
     try {
@@ -70,7 +67,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login user
   const login = async (formData) => {
     setLoading(true);
     try {
@@ -94,7 +90,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout user
   const logout = async () => {
     try {
       await axios.get('/auth/logout');

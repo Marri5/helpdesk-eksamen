@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import Moment from 'react-moment';
 
 const TicketItem = ({ ticket, isAdmin }) => {
-  // Status badge color
   const getStatusColor = (status) => {
     switch (status) {
       case 'Open':
@@ -18,7 +17,6 @@ const TicketItem = ({ ticket, isAdmin }) => {
     }
   };
 
-  // Priority badge color
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'High':

@@ -4,7 +4,6 @@ import { AlertContext } from '../../context/AlertContext';
 const Alert = () => {
   const { alerts, removeAlert } = useContext(AlertContext);
 
-  // Map alert types to Tailwind classes
   const alertTypeClasses = {
     danger: 'bg-danger',
     success: 'bg-success',

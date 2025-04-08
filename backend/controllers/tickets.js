@@ -9,14 +9,12 @@ exports.getTickets = async (req, res) => {
   try {
     let query;
 
-    // If user is not admin, only show their tickets
     if (req.user.role !== 'admin') {
       query = Ticket.find({ user: req.user.id });
     } else {
       query = Ticket.find();
     }
 
-    // Add user reference
     query = query.populate({
       path: 'user',
       select: 'name email'
@@ -49,7 +47,6 @@ exports.getTicket = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Make sure user is ticket owner or admin
     if (ticket.user.id.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ msg: 'Not authorized' });
     }
@@ -114,18 +111,15 @@ exports.updateTicket = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Make sure user is ticket owner or admin
     if (ticket.user.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ msg: 'Not authorized' });
     }
 
-    // Only admin can change status and priority
     if (req.user.role !== 'admin') {
       delete req.body.status;
       delete req.body.priority;
     }
 
-    // Update timestamp
     req.body.updatedAt = Date.now();
 
     ticket = await Ticket.findByIdAndUpdate(
@@ -158,7 +152,6 @@ exports.deleteTicket = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Make sure user is ticket owner or admin
     if (ticket.user.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ msg: 'Not authorized' });
     }
@@ -194,7 +187,6 @@ exports.addComment = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Check if user is allowed to comment (owner or admin)
     if (ticket.user.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ msg: 'Not authorized' });
     }
@@ -229,7 +221,6 @@ exports.addComment = async (req, res) => {
 // @access  Private/Admin
 exports.getTicketStats = async (req, res) => {
   try {
-    // Check if user is admin
     if (req.user.role !== 'admin') {
       return res.status(401).json({ msg: 'Not authorized' });
     }
@@ -239,12 +230,10 @@ exports.getTicketStats = async (req, res) => {
     const resolvedTickets = await Ticket.countDocuments({ status: 'Resolved' });
     const totalTickets = await Ticket.countDocuments();
 
-    // Get ticket counts by category
     const categories = await Ticket.aggregate([
       { $group: { _id: '$category', count: { $sum: 1 } } }
     ]);
 
-    // Get ticket counts by priority
     const priorities = await Ticket.aggregate([
       { $group: { _id: '$priority', count: { $sum: 1 } } }
     ]);

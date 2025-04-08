@@ -18,17 +18,14 @@ const Register = () => {
   const { name, email, password, password2 } = formData;
 
   useEffect(() => {
-    // Clear any existing errors when component mounts
     setError(null);
   }, [setError]);
 
   useEffect(() => {
-    // If authenticated, redirect to dashboard
     if (isAuthenticated) {
       navigate('/dashboard');
     }
 
-    // If error, show alert
     if (error) {
       setAlert(error, 'danger');
     }

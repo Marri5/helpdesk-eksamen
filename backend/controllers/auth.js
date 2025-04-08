@@ -13,19 +13,17 @@ exports.register = async (req, res) => {
   const { name, email, password, role } = req.body;
 
   try {
-    // Check if user exists
     let user = await User.findOne({ email });
 
     if (user) {
       return res.status(400).json({ msg: 'User already exists' });
     }
 
-    // Create user
     user = new User({
       name,
       email,
       password,
-      role: role || 'user' // Default to 'user' if role is not provided
+      role: role || 'user'
     });
 
     await user.save();
@@ -49,14 +47,12 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check for user
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
       return res.status(401).json({ msg: 'Invalid credentials' });
     }
 
-    // Check if password matches
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
@@ -102,9 +98,7 @@ exports.logout = (req, res) => {
   });
 };
 
-// Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
-  // Create token
   const token = user.getSignedJwtToken();
 
   const options = {
