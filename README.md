@@ -1,27 +1,27 @@
 # HelpDesk System
 
-A complete helpdesk system inspired by Spiceworks, built with the MERN stack (MongoDB, Express, React, Node.js).
+Et komplett kundeservicesystem inspirert av Spiceworks, bygget med MERN stack (MongoDB, Express, React, Node.js).
 
-## Features
+## Funksjoner
 
-- User Authentication (Login/Register)
-- Role-based Access Control (User/Admin)
-- Ticket Creation and Management
-- Status Tracking
-- Priority Setting
-- Category Assignment
-- Comment System
-- Admin Dashboard with Statistics
-- Responsive UI
+- Brukerautentisering (Innlogging/Registrering)
+- Rollebasert tilgangskontroll (Bruker/Admin)
+- Opprettelse og administrasjon av henvendelser
+- Statussporing
+- Prioritetsinnstilling
+- Kategoritilordning
+- Kommentarsystem
+- Admin-kontrollpanel med statistikk
+- Responsivt brukergrensesnitt
 
 ## Tech Stack
 
 ### Backend
-- Node.js with Express
+- Node.js med Express
 - MongoDB for database
-- JWT for authentication
-- RESTful API architecture
-- MVC pattern
+- JWT for authentisering
+- RESTful API
+- MVC
 
 ### Frontend
 - React with hooks and context API
@@ -29,78 +29,74 @@ A complete helpdesk system inspired by Spiceworks, built with the MERN stack (Mo
 - Axios for API requests
 - TailwindCSS for UI styling
 
-## Setup Instructions
+## Oppsettinstruksjoner
 
-### Prerequisites
+### Forutsetninger
 - Node.js
 - MongoDB
 - npm or yarn
 
-### Backend Setup
-1. Navigate to the backend directory:
+### Backend Oppsett
+1. Gå til backend-mappen:
    ```
    cd backend
    ```
 
-2. Install dependencies:
+2. Installer dependencies:
    ```
    npm install
    ```
 
-3. Create a `.env` file in the backend directory with the following variables:
+3. Opprett en `.env`-fil i backend-mappen med følgende informasjon:
    ```
    PORT=5000
    MONGO_URI=mongodb://10.12.3.88:27017/helpdesk
-   JWT_SECRET=helpdeskapp_secret_key
+   JWT_SECRET=skjult_sikkerhetsnøkkel
    JWT_EXPIRE=7d
    COOKIE_EXPIRE=7
    NODE_ENV=development
    ```
 
-4. Start the server:
+4. Start serveren:
    ```
    npm run dev
    ```
 
-### Frontend Setup
-1. Navigate to the frontend directory:
+### Frontend Oppsett
+1. Gå til frontend-mappen:
    ```
    cd frontend
    ```
 
-2. Install dependencies:
+2. Installer dependencies:
    ```
    npm install
    ```
 
-3. Start the React app:
+3. Start React-appen:
    ```
    npm start
    ```
 
-## API Endpoints
+## API Endepunkter
 
-### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login a user
-- `GET /api/auth/me` - Get current user
-- `GET /api/auth/logout` - Logout user
+### Autentisering
+- `POST /api/auth/register` - Registrer en ny bruker
+- `POST /api/auth/login` - Logg inn en bruker
+- `GET /api/auth/me` - Hent nåværende bruker
+- `GET /api/auth/logout` - Logg ut bruker
 
 ### Tickets
-- `GET /api/tickets` - Get all tickets
-- `GET /api/tickets/:id` - Get a single ticket
-- `POST /api/tickets` - Create a new ticket
-- `PUT /api/tickets/:id` - Update a ticket
-- `DELETE /api/tickets/:id` - Delete a ticket
-- `POST /api/tickets/:id/comments` - Add a comment to a ticket
-- `GET /api/tickets/stats` - Get ticket statistics (admin only)
+- `GET /api/tickets` - Hent alle tickets
+- `GET /api/tickets/:id` - Hent en enkelt ticket
+- `POST /api/tickets` - Opprett en ny ticket
+- `PUT /api/tickets/:id` - Oppdater en ticket
+- `DELETE /api/tickets/:id` - Slett en ticket
+- `POST /api/tickets/:id/comments` - Legg til en kommentar på en ticket
+- `GET /api/tickets/stats` - Hent statistikken på tickets (kun admin)
 
-### Users
-- `GET /api/users` - Get all users (admin only)
-- `GET /api/users/:id` - Get a user by ID (admin only)
-- `PUT /api/users/:id` - Update a user (admin only)
-- `DELETE /api/users/:id` - Delete a user (admin only)
-
-## License
-
-This project is licensed under the MIT License.
+### Brukere
+- `GET /api/users` - Hent alle brukere (kun admin)
+- `GET /api/users/:id` - Hent en bruker etter ID (kun admin)
+- `PUT /api/users/:id` - Oppdater en bruker (kun admin)
+- `DELETE /api/users/:id` - Slett en bruker (kun admin)

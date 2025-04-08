@@ -235,8 +235,8 @@ exports.getTicketStats = async (req, res) => {
     }
 
     const openTickets = await Ticket.countDocuments({ status: 'Open' });
-    const inProgressTickets = await Ticket.countDocuments({ status: 'Under arbeid' });
-    const resolvedTickets = await Ticket.countDocuments({ status: 'Løst' });
+    const inProgressTickets = await Ticket.countDocuments({ status: 'In Progress' });
+    const resolvedTickets = await Ticket.countDocuments({ status: 'Resolved' });
     const totalTickets = await Ticket.countDocuments();
 
     // Get ticket counts by category

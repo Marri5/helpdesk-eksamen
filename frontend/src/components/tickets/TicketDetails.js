@@ -170,8 +170,8 @@ const TicketDetails = () => {
                         onChange={(e) => setStatus(e.target.value)}
                       >
                         <option value="Open">Open</option>
-                        <option value="Under arbeid">Under arbeid</option>
-                        <option value="Løst">Løst</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
                       </select>
                     </div>
                     <button 

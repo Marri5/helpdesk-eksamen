@@ -9,9 +9,9 @@ const TicketItem = ({ ticket, isAdmin }) => {
     switch (status) {
       case 'Open':
         return 'bg-danger';
-      case 'Under arbeid':
+      case 'In Progress':
         return 'bg-warning';
-      case 'Løst':
+      case 'Resolved':
         return 'bg-success';
       default:
         return 'bg-gray-500';
