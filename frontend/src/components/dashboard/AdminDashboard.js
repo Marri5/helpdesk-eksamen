@@ -1,12 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import axiosInstance from '../../config/axios';
 import { AuthContext } from '../../context/AuthContext';
 import { AlertContext } from '../../context/AlertContext';
 import TicketItem from '../tickets/TicketItem';
 
 const AdminDashboard = () => {
-  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useContext(AuthContext);
   const { setAlert } = useContext(AlertContext);
   const [tickets, setTickets] = useState([]);
   const [users, setUsers] = useState([]);
@@ -30,55 +31,90 @@ const AdminDashboard = () => {
   const [userLoading, setUserLoading] = useState(true);
 
   useEffect(() => {
-    const getTickets = async () => {
-      try {
-        const res = await axios.get('/tickets');
-        setTickets(res.data.data);
-        setLoading(false);
-      } catch (err) {
-        setAlert('Failed to fetch tickets', 'danger');
-        setLoading(false);
-      }
-    };
+    // Check if user is authenticated and is admin
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
 
-    const getStats = async () => {
-      try {
-        const res = await axios.get('/tickets/stats');
-        setStats(res.data.data);
-        setStatLoading(false);
-      } catch (err) {
-        setAlert('Failed to fetch statistics', 'danger');
-        setStatLoading(false);
-      }
-    };
+    if (user && user.role !== 'admin') {
+      navigate('/dashboard');
+      setAlert('Not authorized to access admin dashboard', 'danger');
+      return;
+    }
 
-    const getUsers = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get('/users');
-        setUsers(res.data.data);
+        const [ticketsRes, statsRes, usersRes] = await Promise.all([
+          axiosInstance.get('/tickets'),
+          axiosInstance.get('/tickets/stats'),
+          axiosInstance.get('/users')
+        ]);
+
+        setTickets(ticketsRes.data.data || []);
+        setStats(statsRes.data.data || {
+          total: 0,
+          open: 0,
+          inProgress: 0,
+          resolved: 0,
+          TO: {
+            total: 0,
+            firstYear: 0,
+            secondYear: 0,
+            resolved: 0,
+            pending: 0
+          }
+        });
+        setUsers(usersRes.data.data || []);
+
+        setLoading(false);
+        setStatLoading(false);
         setUserLoading(false);
       } catch (err) {
-        setAlert('Failed to fetch users', 'danger');
+        console.error('Error fetching data:', err);
+        if (err.response?.status === 401) {
+          navigate('/login');
+        } else {
+          setAlert('Failed to fetch dashboard data', 'danger');
+        }
+        setLoading(false);
+        setStatLoading(false);
         setUserLoading(false);
       }
     };
 
-    getTickets();
-    getStats();
-    getUsers();
-  }, [setAlert]);
+    fetchData();
+  }, [isAuthenticated, user, navigate, setAlert]);
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      await axios.put(`/users/${userId}/role`, { role: newRole });
-      setUsers(users.map(u => 
-        u._id === userId ? { ...u, role: newRole } : u
-      ));
-      setAlert('User role updated successfully', 'success');
+      const res = await axiosInstance.put(`/users/${userId}/role`, { role: newRole });
+      if (res.data.success) {
+        setUsers(users.map(u => 
+          u._id === userId ? { ...u, role: newRole } : u
+        ));
+        setAlert('User role updated successfully', 'success');
+      }
     } catch (err) {
-      setAlert('Failed to update user role', 'danger');
+      console.error('Error updating role:', err);
+      if (err.response?.status === 401) {
+        navigate('/login');
+      } else {
+        setAlert(err.response?.data?.msg || 'Failed to update user role', 'danger');
+      }
     }
   };
+
+  if (loading && statLoading && userLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+          <p className="mt-2 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -87,7 +123,7 @@ const AdminDashboard = () => {
           <i className="fas fa-user-shield mr-2"></i> Admin Dashboard
         </h1>
         <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-          <h2 className="text-xl text-primary font-semibold mb-2">Welcome {user && user.name}</h2>
+          <h2 className="text-xl text-primary font-semibold mb-2">Welcome {user?.name}</h2>
           <p className="text-gray-600">Manage tickets, users, and view statistics here.</p>
         </div>
       </div>
@@ -103,19 +139,19 @@ const AdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-primary text-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-2">Total Tickets</h3>
-              <p className="text-3xl font-bold">{stats.total}</p>
+              <p className="text-3xl font-bold">{stats?.total || 0}</p>
             </div>
             <div className="bg-danger text-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-2">Open</h3>
-              <p className="text-3xl font-bold">{stats.open}</p>
+              <p className="text-3xl font-bold">{stats?.open || 0}</p>
             </div>
             <div className="bg-warning text-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-2">In Progress</h3>
-              <p className="text-3xl font-bold">{stats.inProgress}</p>
+              <p className="text-3xl font-bold">{stats?.inProgress || 0}</p>
             </div>
             <div className="bg-success text-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-2">Resolved</h3>
-              <p className="text-3xl font-bold">{stats.resolved}</p>
+              <p className="text-3xl font-bold">{stats?.resolved || 0}</p>
             </div>
           </div>
 
@@ -124,23 +160,23 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-semibold text-blue-800">Total TO</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats.TO.total}</p>
+                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.total || 0}</p>
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-semibold text-blue-800">1st Year</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats.TO.firstYear}</p>
+                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.firstYear || 0}</p>
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-semibold text-blue-800">2nd Year</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats.TO.secondYear}</p>
+                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.secondYear || 0}</p>
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-semibold text-blue-800">Resolved</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats.TO.resolved}</p>
+                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.resolved || 0}</p>
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-semibold text-blue-800">Pending</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats.TO.pending}</p>
+                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.pending || 0}</p>
               </div>
             </div>
           </div>

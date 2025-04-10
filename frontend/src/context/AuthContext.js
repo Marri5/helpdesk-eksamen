@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../config/axios';
 
 export const AuthContext = createContext();
 
@@ -13,9 +13,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       if (localStorage.token) {
-        setAuthToken(localStorage.token);
         try {
-          const res = await axios.get('/auth/me');
+          const res = await axiosInstance.get('/auth/me');
           setUser(res.data.data);
           setIsAuthenticated(true);
           setLoading(false);
@@ -36,25 +35,16 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  const setAuthToken = (token) => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
-    }
-  };
-
   const register = async (formData) => {
     setLoading(true);
     try {
-      const res = await axios.post('/auth/register', formData);
+      const res = await axiosInstance.post('/auth/register', formData);
       
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       
       setToken(res.data.token);
       setUser(res.data.user);
-      setAuthToken(res.data.token);
       setIsAuthenticated(true);
       setLoading(false);
       setError(null);
@@ -70,14 +60,13 @@ export const AuthProvider = ({ children }) => {
   const login = async (formData) => {
     setLoading(true);
     try {
-      const res = await axios.post('/auth/login', formData);
+      const res = await axiosInstance.post('/auth/login', formData);
       
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       
       setToken(res.data.token);
       setUser(res.data.user);
-      setAuthToken(res.data.token);
       setIsAuthenticated(true);
       setLoading(false);
       setError(null);
@@ -92,14 +81,13 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.get('/auth/logout');
+      await axiosInstance.get('/auth/logout');
     } catch (err) {
       console.error(err.message);
     }
     
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    setAuthToken(null);
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);

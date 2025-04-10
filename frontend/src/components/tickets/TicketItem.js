@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import Moment from 'react-moment';
 
-const TicketItem = ({ ticket, isAdmin }) => {
+const TicketItem = ({ ticket, isAdmin = false }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Open':
@@ -100,10 +100,6 @@ const TicketItem = ({ ticket, isAdmin }) => {
 TicketItem.propTypes = {
   ticket: PropTypes.object.isRequired,
   isAdmin: PropTypes.bool
-};
-
-TicketItem.defaultProps = {
-  isAdmin: false
 };
 
 export default TicketItem; 

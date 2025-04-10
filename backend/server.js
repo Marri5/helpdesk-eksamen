@@ -8,20 +8,25 @@ const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => {
-    console.error('MongoDB Connection Error:', err);
-    process.exit(1);
-  });
-
 const app = express();
 
-app.use(express.json());
+// CORS configuration - must be before other middleware
+app.use(cors({
+  origin: true, // Allow all origins temporarily for debugging
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
 
+// Basic middleware
+app.use(express.json());
 app.use(cookieParser());
 
-app.use(helmet());
+// Security middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "unsafe-none" }
+}));
 
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000,
@@ -29,22 +34,29 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later'
 });
 
-
 app.use(limiter);
 
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+// Database connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => {
+    console.error('MongoDB Connection Error:', err);
+    process.exit(1);
+  });
 
+// Routes
 const authRoutes = require('./routes/auth');
 const ticketRoutes = require('./routes/tickets');
 const userRoutes = require('./routes/users');
+
+// Pre-flight OPTIONS handling
+app.options('*', cors());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/users', userRoutes);
 
+// Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -55,6 +67,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+// Listen on all network interfaces
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`CORS enabled for all origins in development mode`);
 }); 
