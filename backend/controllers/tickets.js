@@ -9,27 +9,95 @@ exports.getTickets = async (req, res) => {
   try {
     let query;
 
-    if (req.user.role !== 'admin') {
-      query = Ticket.find({ user: req.user.id });
-    } else {
-      query = Ticket.find();
+    // Copy req.query
+    const reqQuery = { ...req.query };
+
+    // Fields to exclude
+    const removeFields = ['select', 'sort', 'page', 'limit'];
+    removeFields.forEach(param => delete reqQuery[param]);
+
+    // Create query string
+    let queryStr = JSON.stringify(reqQuery);
+
+    // Create operators ($gt, $gte, etc)
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+
+    // Finding resource
+    query = Ticket.find(JSON.parse(queryStr));
+
+    // Select Fields
+    if (req.query.select) {
+      const fields = req.query.select.split(',').join(' ');
+      query = query.select(fields);
     }
 
-    query = query.populate({
-      path: 'user',
-      select: 'name email'
-    });
+    // Sort
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
 
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const total = await Ticket.countDocuments(JSON.parse(queryStr));
+
+    query = query.skip(startIndex).limit(limit);
+
+    // If user is not admin, only show their tickets
+    if (req.user.role === 'user') {
+      query = query.find({ submitter: req.user._id });
+    } else if (req.user.role.startsWith('to_')) {
+      // TOs can see tickets assigned to them and tickets matching their year
+      const yearFilter = req.user.role === 'to_first_year' ? 'first_year' : 'second_year';
+      query = query.find({
+        $or: [
+          { assignedTo: req.user._id },
+          { yearOfStudy: yearFilter }
+        ]
+      });
+    }
+
+    // Populate references
+    query = query.populate([
+      { path: 'submitter', select: 'name email' },
+      { path: 'assignedTo', select: 'name email role' },
+      { path: 'comments.user', select: 'name email' }
+    ]);
+
+    // Executing query
     const tickets = await query;
 
-    res.json({
+    // Pagination result
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit
+      };
+    }
+
+    res.status(200).json({
       success: true,
       count: tickets.length,
+      pagination,
       data: tickets
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ msg: 'Server error' });
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 

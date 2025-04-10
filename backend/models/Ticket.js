@@ -1,70 +1,64 @@
 const mongoose = require('mongoose');
 
-const TicketSchema = new mongoose.Schema({
+const ticketSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Please add a title'],
-    trim: true,
-    maxlength: [100, 'Title cannot be more than 100 characters']
+    required: true
   },
   description: {
     type: String,
-    required: [true, 'Please add a description'],
-    maxlength: [1000, 'Description cannot be more than 1000 characters']
+    required: true
   },
   category: {
     type: String,
-    required: [true, 'Please select a category'],
-    enum: ['Hardware', 'Software', 'Network', 'Account', 'Other']
+    enum: ['Academic Support', 'Technical Issue', 'Course Material', 'Exam Accommodation', 'Study Group', 'Other'],
+    required: true
   },
   status: {
     type: String,
-    enum: ['Open', 'In Progress', 'Resolved'],
-    default: 'Open'
+    enum: ['new', 'in_progress', 'resolved', 'closed'],
+    default: 'new'
   },
   priority: {
     type: String,
-    enum: ['Low', 'Medium', 'High'],
-    default: 'Medium'
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
   },
-  user: {
-    type: mongoose.Schema.ObjectId,
+  subject: {
+    type: String,
+    required: true
+  },
+  yearOfStudy: {
+    type: String,
+    enum: ['first_year', 'second_year'],
+    required: true
+  },
+  submitter: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  comments: [
-    {
-      text: {
-        type: String,
-        required: true
-      },
-      user: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'User',
-        required: true
-      },
-      name: {
-        type: String,
-        required: true
-      },
-      role: {
-        type: String,
-        required: true
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now
-      }
-    }
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
+  comments: [{
+    text: {
+      type: String,
+      required: true
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
+}, {
+  timestamps: true
 });
 
-module.exports = mongoose.model('Ticket', TicketSchema); 
+module.exports = mongoose.model('Ticket', ticketSchema); 

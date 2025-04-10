@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import Moment from 'react-moment';
@@ -16,23 +16,39 @@ const TicketDetails = () => {
   const [commentText, setCommentText] = useState('');
   const [status, setStatus] = useState('');
   const [priority, setPriority] = useState('');
+  const [availableTOs, setAvailableTOs] = useState([]);
+
+  const loadTicket = useCallback(async () => {
+    try {
+      const res = await axios.get(`/api/tickets/${id}`);
+      setTicket(res.data.data);
+      setStatus(res.data.data.status);
+      setPriority(res.data.data.priority);
+      setLoading(false);
+    } catch (err) {
+      setAlert('Failed to fetch ticket details', 'danger');
+      navigate('/dashboard');
+    }
+  }, [id, setAlert, navigate]);
+
+  const loadTOs = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/users');
+      const tos = res.data.data.filter(u => 
+        u.role === 'to_first_year' || u.role === 'to_second_year'
+      );
+      setAvailableTOs(tos);
+    } catch (error) {
+      setAlert('Error loading TOs', 'error');
+    }
+  }, [setAlert]);
 
   useEffect(() => {
-    const getTicket = async () => {
-      try {
-        const res = await axios.get(`/tickets/${id}`);
-        setTicket(res.data.data);
-        setStatus(res.data.data.status);
-        setPriority(res.data.data.priority);
-        setLoading(false);
-      } catch (err) {
-        setAlert('Failed to fetch ticket details', 'danger');
-        navigate('/dashboard');
-      }
-    };
-
-    getTicket();
-  }, [id, setAlert, navigate]);
+    loadTicket();
+    if (user?.role === 'admin') {
+      loadTOs();
+    }
+  }, [loadTicket, loadTOs, user?.role]);
 
   const onCommentSubmit = async (e) => {
     e.preventDefault();
@@ -42,7 +58,7 @@ const TicketDetails = () => {
     }
 
     try {
-      const res = await axios.post(`/tickets/${id}/comments`, { text: commentText });
+      const res = await axios.post(`/api/tickets/${id}/comments`, { text: commentText });
       setTicket({ ...ticket, comments: res.data.data });
       setCommentText('');
       setAlert('Comment added successfully', 'success');
@@ -54,7 +70,7 @@ const TicketDetails = () => {
   const onStatusChange = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(`/tickets/${id}`, { status });
+      const res = await axios.put(`/api/tickets/${id}`, { status });
       setTicket(res.data.data);
       setAlert('Ticket status updated successfully', 'success');
     } catch (err) {
@@ -65,7 +81,7 @@ const TicketDetails = () => {
   const onPriorityChange = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(`/tickets/${id}`, { priority });
+      const res = await axios.put(`/api/tickets/${id}`, { priority });
       setTicket(res.data.data);
       setAlert('Ticket priority updated successfully', 'success');
     } catch (err) {
@@ -73,38 +89,40 @@ const TicketDetails = () => {
     }
   };
 
-  // Status badge color
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Open':
-        return 'bg-danger';
-      case 'Under arbeid':
-        return 'bg-warning';
-      case 'Løst':
-        return 'bg-success';
-      default:
-        return 'bg-gray-500';
+  const handleAssignTO = async (toId) => {
+    try {
+      await axios.put(`/api/tickets/${id}`, { assignedTo: toId });
+      setAlert('Ticket assigned successfully', 'success');
+      loadTicket();
+    } catch (error) {
+      setAlert(error.response?.data?.message || 'Error assigning ticket', 'error');
     }
   };
 
-  // Priority badge color
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'High':
-        return 'bg-danger';
-      case 'Medium':
-        return 'bg-warning';
-      case 'Low':
-        return 'bg-info';
-      default:
-        return 'bg-gray-500';
+  const handleStatusChange = async (newStatus) => {
+    try {
+      await axios.put(`/api/tickets/${id}`, { status: newStatus });
+      setAlert('Ticket status updated successfully', 'success');
+      loadTicket();
+    } catch (error) {
+      setAlert(error.response?.data?.message || 'Error updating ticket status', 'error');
     }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!ticket) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+          <p>Ticket not found</p>
+        </div>
       </div>
     );
   }
@@ -117,40 +135,60 @@ const TicketDetails = () => {
             <h2 className="text-xl font-bold">{ticket.title}</h2>
           </div>
           <div className="p-6">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">{ticket.title}</h1>
+                <p className="text-sm text-gray-500">
+                  Submitted by {ticket.submitter?.name || 'Unknown'} on{' '}
+                  {new Date(ticket.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              {(user?.role === 'admin' || user?.role?.startsWith('to_')) && (
+                <div className="flex space-x-4">
+                  <select
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={ticket.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                  >
+                    <option value="new">New</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                  {user?.role === 'admin' && (
+                    <select
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={ticket.assignedTo || ''}
+                      onChange={(e) => handleAssignTO(e.target.value)}
+                    >
+                      <option value="">Assign TO</option>
+                      {availableTOs.map(to => (
+                        <option key={to._id} value={to._id}>
+                          {to.name} ({to.role === 'to_first_year' ? '1st Year' : '2nd Year'})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <span className="font-semibold">Category:</span> {ticket.category}
+              </div>
+              <div>
+                <span className="font-semibold">Priority:</span> {ticket.priority}
+              </div>
+              <div>
+                <span className="font-semibold">Subject:</span> {ticket.subject}
+              </div>
+              <div>
+                <span className="font-semibold">Year of Study:</span> {ticket.yearOfStudy}
+              </div>
+            </div>
+
             <div className="mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                <div className="flex items-center">
-                  <span className="font-semibold mr-2">Status:</span>
-                  <span className={`${getStatusColor(ticket.status)} text-white text-xs px-2 py-1 rounded`}>
-                    {ticket.status}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-semibold mr-2">Priority:</span>
-                  <span className={`${getPriorityColor(ticket.priority)} text-white text-xs px-2 py-1 rounded`}>
-                    {ticket.priority}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                <div>
-                  <span className="font-semibold">Category:</span> {ticket.category}
-                </div>
-                <div>
-                  <span className="font-semibold">Submitted By:</span> {ticket.user && ticket.user.name}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                <div>
-                  <span className="font-semibold">Created:</span>{' '}
-                  <Moment format="YYYY-MM-DD HH:mm">{ticket.createdAt}</Moment>
-                </div>
-                <div>
-                  <span className="font-semibold">Last Updated:</span>{' '}
-                  <Moment format="YYYY-MM-DD HH:mm">{ticket.updatedAt}</Moment>
-                </div>
-              </div>
-              <hr className="my-4 border-gray-200" />
               <h3 className="text-lg font-semibold mb-2">Description:</h3>
               <p className="text-gray-700">{ticket.description}</p>
             </div>
@@ -233,8 +271,8 @@ const TicketDetails = () => {
                     <div key={index} className="bg-gray-50 rounded-lg p-4 border-l-4 border-primary">
                       <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center">
-                          <span className="font-semibold mr-2">{comment.name}</span>
-                          <span className="bg-info text-white text-xs px-2 py-0.5 rounded">{comment.role}</span>
+                          <span className="font-semibold mr-2">{comment.user?.name || 'Unknown'}</span>
+                          <span className="bg-info text-white text-xs px-2 py-0.5 rounded">{comment.user?.role || 'User'}</span>
                         </div>
                         <span className="text-sm text-gray-500">
                           <Moment format="YYYY-MM-DD HH:mm">{comment.createdAt}</Moment>
@@ -253,7 +291,7 @@ const TicketDetails = () => {
           </div>
           <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
             <Link
-              to={user && user.role === 'admin' ? '/admin' : '/dashboard'}
+              to={user?.role === 'admin' ? '/admin' : '/dashboard'}
               className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
             >
               Back to Dashboard
