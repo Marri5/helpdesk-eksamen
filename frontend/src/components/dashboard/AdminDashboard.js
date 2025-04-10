@@ -95,7 +95,7 @@ const AdminDashboard = () => {
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      const res = await axiosInstance.put(`/api/users/${userId}`, { role: newRole });
+      const res = await axiosInstance.put(`/users/${userId}`, { role: newRole });
       if (res.data.success) {
         setUsers(users.map(u => 
           u._id === userId ? { ...u, role: newRole } : u
@@ -246,11 +246,13 @@ const AdminDashboard = () => {
                   <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.role.includes('TO') ? 'bg-green-100 text-green-800' :
+                      user.role === 'firstline' || user.role === 'secondline' ? 'bg-green-100 text-green-800' :
                       user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
                       'bg-blue-100 text-blue-800'
                     }`}>
-                      {user.role}
+                      {user.role === 'firstline' ? 'First-line Support' :
+                       user.role === 'secondline' ? 'Second-line Support' :
+                       user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
