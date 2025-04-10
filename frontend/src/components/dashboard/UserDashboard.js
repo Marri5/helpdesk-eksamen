@@ -36,7 +36,10 @@ const UserDashboard = () => {
         <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
           <h2 className="text-xl text-primary font-semibold mb-2">Welcome {user && user.name}</h2>
           <p className="text-gray-600 mb-4">You can submit new tickets and check the status of your tickets here.</p>
-          <Link to="/tickets/new" className="btn btn-primary inline-flex items-center">
+          <Link 
+            to="/tickets/new" 
+            className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-600 inline-flex items-center"
+          >
             <i className="fas fa-plus mr-2"></i> Submit New Ticket
           </Link>
         </div>
@@ -51,7 +54,17 @@ const UserDashboard = () => {
       ) : tickets.length > 0 ? (
         <div className="space-y-4">
           {tickets.map((ticket) => (
-            <TicketItem key={ticket._id} ticket={ticket} />
+            <div key={ticket._id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+              <TicketItem ticket={ticket} />
+              <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <Link
+                  to={`/tickets/${ticket._id}`}
+                  className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-600 inline-flex items-center"
+                >
+                  <i className="fas fa-eye mr-2"></i> View Details
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
       ) : (

@@ -5,28 +5,50 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
 
 dotenv.config();
 
 const app = express();
 
-// CORS configuration - must be before other middleware
+// CORS configuration
 app.use(cors({
-  origin: true, // Allow all origins temporarily for debugging
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// Basic middleware
-app.use(express.json());
-app.use(cookieParser());
 
 // Security middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginOpenerPolicy: { policy: "unsafe-none" }
-}));
+app.use(helmet());
+app.use(cookieParser());
+app.use(express.json());
+
+// Authentication middleware
+app.use((req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        message: 'Token expired',
+        code: 'TOKEN_EXPIRED'
+      });
+    }
+    return res.status(401).json({ 
+      message: 'Invalid token',
+      code: 'INVALID_TOKEN'
+    });
+  }
+});
 
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000,

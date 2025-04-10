@@ -1,130 +1,116 @@
-import React, { createContext, useState, useEffect } from 'react';
-import axiosInstance from '../config/axios';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 
-export const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const loadUser = async () => {
-      if (localStorage.token) {
-        try {
-          const res = await axiosInstance.get('/auth/me');
-          setUser(res.data.data);
-          setIsAuthenticated(true);
-          setLoading(false);
-        } catch (err) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setToken(null);
-          setUser(null);
-          setIsAuthenticated(false);
-          setError(err.response?.data?.msg || 'Authentication failed');
-          setLoading(false);
+    // Initialize axios defaults
+    axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+    // Set up axios interceptor for token
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         }
-      } else {
-        setLoading(false);
-      }
+        verifyToken();
+    }, []);
+
+    const setAuthToken = (token) => {
+        if (token) {
+            localStorage.setItem('token', token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        } else {
+            localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
+        }
     };
 
-    loadUser();
-  }, []);
+    const verifyToken = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setLoading(false);
+                return;
+            }
 
-  const register = async (formData) => {
-    setLoading(true);
-    try {
-      const res = await axiosInstance.post('/auth/register', formData);
-      
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      
-      setToken(res.data.token);
-      setUser(res.data.user);
-      setIsAuthenticated(true);
-      setLoading(false);
-      setError(null);
-      
-      return res.data;
-    } catch (err) {
-      setError(err.response?.data?.msg || 'Registration failed');
-      setLoading(false);
-      throw err;
+            const response = await axios.get('/api/auth/verify');
+            setUser(response.data.user);
+            setAuthToken(response.data.token);
+        } catch (error) {
+            if (error.response?.data?.code === 'TOKEN_EXPIRED') {
+                logout();
+            }
+            console.error('Token verification failed:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const login = async (email, password) => {
+        try {
+            setError(null);
+            const response = await axios.post('/api/auth/login', { email, password });
+            const { user, token } = response.data;
+            
+            setUser(user);
+            setAuthToken(token);
+            
+            return user;
+        } catch (error) {
+            const message = error.response?.data?.message || 'Login failed';
+            setError(message);
+            throw new Error(message);
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await axios.post('/api/auth/logout');
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setUser(null);
+            setAuthToken(null);
+        }
+    };
+
+    const getCurrentUser = async () => {
+        try {
+            const response = await axios.get('/api/auth/me');
+            setUser(response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching current user:', error);
+            throw error;
+        }
+    };
+
+    return (
+        <AuthContext.Provider value={{
+            user,
+            loading,
+            error,
+            login,
+            logout,
+            getCurrentUser,
+            verifyToken
+        }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
     }
-  };
+    return context;
+};
 
-  const login = async (formData) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const res = await axiosInstance.post('/auth/login', formData);
-      
-      if (res.data.success && res.data.token) {
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.user));
-        
-        setToken(res.data.token);
-        setUser(res.data.user);
-        setIsAuthenticated(true);
-        setError(null);
-      } else {
-        throw new Error('Invalid response from server');
-      }
-    } catch (err) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-      
-      // Handle rate limiting error specifically
-      if (err.response?.status === 429) {
-        const retryAfter = err.response.headers['retry-after'] || 60; // Default to 60 seconds if header not present
-        setError(`Too many login attempts. Please try again in ${retryAfter} seconds.`);
-        // Store the timestamp when we can retry
-        localStorage.setItem('loginCooldown', (Date.now() + (retryAfter * 1000)).toString());
-      } else {
-        setError(err.response?.data?.msg || 'Login failed. Please check your credentials.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await axiosInstance.get('/auth/logout');
-    } catch (err) {
-      console.error(err.message);
-    }
-    
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        token,
-        isAuthenticated,
-        loading,
-        user,
-        error,
-        register,
-        login,
-        logout,
-        setError
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-}; 
+export default AuthContext; 

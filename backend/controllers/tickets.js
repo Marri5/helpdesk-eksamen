@@ -42,18 +42,23 @@ exports.getTicket = async (req, res) => {
     const ticket = await Ticket.findById(req.params.id)
       .populate('user', 'name email')
       .populate('assignedTo', 'name role')
-      .populate('comments.user', 'name');
+      .populate('comments.user', 'name role');
 
     if (!ticket) {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Make sure user has access to this ticket
-    if (
-      ticket.user.toString() !== req.user.id &&
-      req.user.role === 'user' &&
-      (!req.user.role.startsWith('TO') || ticket.assignedTo?.toString() !== req.user.id)
-    ) {
+    // Access control:
+    // - Admin can see all tickets
+    // - Support staff can see tickets they're assigned to or tickets in their support level
+    // - Users can see their own tickets
+    if (req.user.role === 'user' && ticket.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized' });
+    }
+
+    if ((req.user.role === 'firstline' || req.user.role === 'secondline') && 
+        ticket.assignedTo?.toString() !== req.user.id && 
+        ticket.supportLevel !== req.user.role) {
       return res.status(401).json({ msg: 'Not authorized' });
     }
 
