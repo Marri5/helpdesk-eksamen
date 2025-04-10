@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const TicketSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   title: {
     type: String,
     required: [true, 'Please add a title'],
@@ -10,7 +15,7 @@ const TicketSchema = new mongoose.Schema({
   description: {
     type: String,
     required: [true, 'Please add a description'],
-    maxlength: [1000, 'Description cannot be more than 1000 characters']
+    maxlength: [500, 'Description cannot be more than 500 characters']
   },
   category: {
     type: String,
@@ -19,35 +24,40 @@ const TicketSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Open', 'In Progress', 'Resolved'],
-    default: 'Open'
+    enum: ['new', 'in_progress', 'escalated', 'resolved'],
+    default: 'new'
   },
   priority: {
     type: String,
-    enum: ['Low', 'Medium', 'High'],
-    default: 'Medium'
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
   },
-  user: {
-    type: mongoose.Schema.ObjectId,
+  supportLevel: {
+    type: String,
+    enum: ['firstline', 'secondline'],
+    default: 'firstline'
+  },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  TOYear: {
+    type: String,
+    enum: ['1', '2']
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
   comments: [
     {
-      text: {
-        type: String,
-        required: true
-      },
       user: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
       },
-      name: {
-        type: String,
-        required: true
-      },
-      role: {
+      text: {
         type: String,
         required: true
       },
@@ -65,6 +75,12 @@ const TicketSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+});
+
+// Update the updatedAt timestamp before save
+TicketSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
 });
 
 module.exports = mongoose.model('Ticket', TicketSchema); 

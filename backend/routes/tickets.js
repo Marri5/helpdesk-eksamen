@@ -7,7 +7,8 @@ const {
   updateTicket,
   deleteTicket,
   addComment,
-  getTicketStats
+  getTicketStats,
+  assignTicket
 } = require('../controllers/tickets');
 const { protect, authorize } = require('../middlewares/auth');
 
@@ -47,6 +48,19 @@ router.post(
 // @desc    Update ticket
 // @access  Private
 router.put('/:id', updateTicket);
+
+// @route   PUT /api/tickets/:id/assign
+// @desc    Assign ticket to TO
+// @access  Private/Admin
+router.put(
+  '/:id/assign',
+  authorize('admin'),
+  [
+    check('assignedTo', 'Assigned user ID is required').not().isEmpty(),
+    check('TOYear', 'TO year is required').isIn(['1', '2'])
+  ],
+  assignTicket
+);
 
 // @route   DELETE /api/tickets/:id
 // @desc    Delete ticket

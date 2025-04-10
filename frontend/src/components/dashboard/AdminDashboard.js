@@ -30,6 +30,13 @@ const AdminDashboard = () => {
   const [statLoading, setStatLoading] = useState(true);
   const [userLoading, setUserLoading] = useState(true);
 
+  const [filterOptions, setFilterOptions] = useState({
+    status: '',
+    priority: '',
+    TOYear: '',
+    assignedTo: ''
+  });
+
   useEffect(() => {
     // Check if user is authenticated and is admin
     if (!isAuthenticated) {
@@ -88,7 +95,7 @@ const AdminDashboard = () => {
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      const res = await axiosInstance.put(`/users/${userId}/role`, { role: newRole });
+      const res = await axiosInstance.put(`/users/${userId}`, { role: newRole });
       if (res.data.success) {
         setUsers(users.map(u => 
           u._id === userId ? { ...u, role: newRole } : u
@@ -99,10 +106,40 @@ const AdminDashboard = () => {
       console.error('Error updating role:', err);
       if (err.response?.status === 401) {
         navigate('/login');
+      } else if (err.response?.status === 404) {
+        setAlert('User not found', 'danger');
       } else {
         setAlert(err.response?.data?.msg || 'Failed to update user role', 'danger');
       }
     }
+  };
+
+  const handleAssignTicket = async (ticketId, userId, TOYear) => {
+    try {
+      const res = await axiosInstance.put(`/tickets/${ticketId}/assign`, {
+        assignedTo: userId,
+        TOYear
+      });
+      if (res.data.success) {
+        setTickets(tickets.map(t =>
+          t._id === ticketId ? { ...t, assignedTo: userId, TOYear } : t
+        ));
+        setAlert('Ticket assigned successfully', 'success');
+      }
+    } catch (err) {
+      console.error('Error assigning ticket:', err);
+      setAlert(err.response?.data?.msg || 'Failed to assign ticket', 'danger');
+    }
+  };
+
+  const filterTickets = (tickets) => {
+    return tickets.filter(ticket => {
+      if (filterOptions.status && ticket.status !== filterOptions.status) return false;
+      if (filterOptions.priority && ticket.priority !== filterOptions.priority) return false;
+      if (filterOptions.TOYear && ticket.TOYear !== filterOptions.TOYear) return false;
+      if (filterOptions.assignedTo && ticket.assignedTo !== filterOptions.assignedTo) return false;
+      return true;
+    });
   };
 
   if (loading && statLoading && userLoading) {
@@ -206,7 +243,11 @@ const AdminDashboard = () => {
                   <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      user.role.includes('TO') ? 'bg-green-100 text-green-800' :
+                      user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
                       {user.role}
                     </span>
                   </td>
@@ -218,6 +259,8 @@ const AdminDashboard = () => {
                     >
                       <option value="user">User</option>
                       <option value="admin">Admin</option>
+                      <option value="TO1">TO 1st Line</option>
+                      <option value="TO2">TO 2nd Line</option>
                     </select>
                   </td>
                 </tr>
@@ -229,14 +272,78 @@ const AdminDashboard = () => {
 
       <h2 className="text-xl font-bold mb-4">All Tickets</h2>
 
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <select
+          className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+          value={filterOptions.status}
+          onChange={(e) => setFilterOptions({...filterOptions, status: e.target.value})}
+        >
+          <option value="">All Statuses</option>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+        </select>
+
+        <select
+          className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+          value={filterOptions.priority}
+          onChange={(e) => setFilterOptions({...filterOptions, priority: e.target.value})}
+        >
+          <option value="">All Priorities</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+
+        <select
+          className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+          value={filterOptions.TOYear}
+          onChange={(e) => setFilterOptions({...filterOptions, TOYear: e.target.value})}
+        >
+          <option value="">All TO Years</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+        </select>
+
+        <select
+          className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+          value={filterOptions.assignedTo}
+          onChange={(e) => setFilterOptions({...filterOptions, assignedTo: e.target.value})}
+        >
+          <option value="">All Assignees</option>
+          {users.filter(u => u.role.includes('TO')).map(to => (
+            <option key={to._id} value={to._id}>{to.name} ({to.role})</option>
+          ))}
+        </select>
+      </div>
+
       {loading ? (
         <div className="text-center py-8">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
         </div>
-      ) : tickets.length > 0 ? (
+      ) : filterTickets(tickets).length > 0 ? (
         <div className="space-y-4">
-          {tickets.map((ticket) => (
-            <TicketItem key={ticket._id} ticket={ticket} isAdmin={true} />
+          {filterTickets(tickets).map((ticket) => (
+            <div key={ticket._id} className="relative">
+              <div className="absolute top-4 right-4">
+                <select
+                  className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                  onChange={(e) => {
+                    const [userId, TOYear] = e.target.value.split('|');
+                    handleAssignTicket(ticket._id, userId, TOYear);
+                  }}
+                  defaultValue=""
+                >
+                  <option value="">Assign TO</option>
+                  {users.filter(u => u.role.includes('TO')).map((to) => (
+                    <option key={to._id} value={`${to._id}|${to.role.slice(2)}`}>
+                      {to.name} (TO{to.role.slice(2)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <TicketItem ticket={ticket} isAdmin={true} />
+            </div>
           ))}
         </div>
       ) : (

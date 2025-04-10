@@ -7,20 +7,21 @@ const { validationResult } = require('express-validator');
 // @access  Private
 exports.getTickets = async (req, res) => {
   try {
-    let query;
-
-    if (req.user.role !== 'admin') {
-      query = Ticket.find({ user: req.user.id });
-    } else {
-      query = Ticket.find();
+    let query = {};
+    
+    // If user is TO, only show their assigned tickets
+    if (req.user.role.startsWith('TO')) {
+      query.assignedTo = req.user.id;
+    }
+    // If regular user, only show their tickets
+    else if (req.user.role === 'user') {
+      query.user = req.user.id;
     }
 
-    query = query.populate({
-      path: 'user',
-      select: 'name email'
-    });
-
-    const tickets = await query;
+    const tickets = await Ticket.find(query)
+      .populate('user', 'name email')
+      .populate('assignedTo', 'name role')
+      .sort('-createdAt');
 
     res.json({
       success: true,
@@ -38,16 +39,21 @@ exports.getTickets = async (req, res) => {
 // @access  Private
 exports.getTicket = async (req, res) => {
   try {
-    const ticket = await Ticket.findById(req.params.id).populate({
-      path: 'user',
-      select: 'name email'
-    });
+    const ticket = await Ticket.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('assignedTo', 'name role')
+      .populate('comments.user', 'name');
 
     if (!ticket) {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    if (ticket.user.id.toString() !== req.user.id && req.user.role !== 'admin') {
+    // Make sure user has access to this ticket
+    if (
+      ticket.user.toString() !== req.user.id &&
+      req.user.role === 'user' &&
+      (!req.user.role.startsWith('TO') || ticket.assignedTo?.toString() !== req.user.id)
+    ) {
       return res.status(401).json({ msg: 'Not authorized' });
     }
 
@@ -74,20 +80,20 @@ exports.createTicket = async (req, res) => {
   }
 
   try {
-    const { title, description, category } = req.body;
-
-    const ticket = new Ticket({
-      title,
-      description,
-      category,
+    const newTicket = new Ticket({
+      title: req.body.title,
+      description: req.body.description,
+      category: req.body.category,
+      priority: req.body.priority || 'Medium',
+      status: 'Open',
       user: req.user.id
     });
 
-    const savedTicket = await ticket.save();
+    const ticket = await newTicket.save();
 
     res.status(201).json({
       success: true,
-      data: savedTicket
+      data: ticket
     });
   } catch (err) {
     console.error(err.message);
@@ -111,22 +117,20 @@ exports.updateTicket = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    if (ticket.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    // Make sure user owns ticket or is admin/TO
+    if (
+      ticket.user.toString() !== req.user.id &&
+      req.user.role === 'user' &&
+      (!req.user.role.startsWith('TO') || ticket.assignedTo?.toString() !== req.user.id)
+    ) {
       return res.status(401).json({ msg: 'Not authorized' });
     }
-
-    if (req.user.role !== 'admin') {
-      delete req.body.status;
-      delete req.body.priority;
-    }
-
-    req.body.updatedAt = Date.now();
 
     ticket = await Ticket.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
       { new: true, runValidators: true }
-    );
+    ).populate('user', 'name email').populate('assignedTo', 'name role');
 
     res.json({
       success: true,
@@ -152,6 +156,7 @@ exports.deleteTicket = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
+    // Make sure user owns ticket or is admin
     if (ticket.user.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ msg: 'Not authorized' });
     }
@@ -187,70 +192,135 @@ exports.addComment = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    if (ticket.user.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-
     const newComment = {
       text: req.body.text,
-      user: req.user.id,
-      name: req.user.name,
-      role: req.user.role
+      user: req.user.id
     };
 
     ticket.comments.unshift(newComment);
-    ticket.updatedAt = Date.now();
 
     await ticket.save();
 
+    const populatedTicket = await Ticket.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('assignedTo', 'name role')
+      .populate('comments.user', 'name');
+
     res.json({
       success: true,
-      data: ticket.comments
+      data: populatedTicket
     });
   } catch (err) {
     console.error(err.message);
-    if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: 'Ticket not found' });
-    }
     res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// @desc    Get ticket statistics (for admin)
+// @desc    Get ticket statistics
 // @route   GET /api/tickets/stats
 // @access  Private/Admin
 exports.getTicketStats = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
+    const total = await Ticket.countDocuments();
+    const open = await Ticket.countDocuments({ status: 'Open' });
+    const inProgress = await Ticket.countDocuments({ status: 'In Progress' });
+    const resolved = await Ticket.countDocuments({ status: 'Resolved' });
 
-    const openTickets = await Ticket.countDocuments({ status: 'Open' });
-    const inProgressTickets = await Ticket.countDocuments({ status: 'In Progress' });
-    const resolvedTickets = await Ticket.countDocuments({ status: 'Resolved' });
-    const totalTickets = await Ticket.countDocuments();
+    // TO specific stats
+    const TOStats = {
+      total: await Ticket.countDocuments({ assignedTo: { $exists: true } }),
+      firstYear: await Ticket.countDocuments({ TOYear: '1' }),
+      secondYear: await Ticket.countDocuments({ TOYear: '2' }),
+      resolved: await Ticket.countDocuments({
+        assignedTo: { $exists: true },
+        status: 'Resolved'
+      }),
+      pending: await Ticket.countDocuments({
+        assignedTo: { $exists: true },
+        status: { $ne: 'Resolved' }
+      })
+    };
 
+    // Get category distribution
     const categories = await Ticket.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } }
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
     ]);
 
+    // Get priority distribution
     const priorities = await Ticket.aggregate([
-      { $group: { _id: '$priority', count: { $sum: 1 } } }
+      { $group: { _id: '$priority', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
     ]);
 
     res.json({
       success: true,
       data: {
-        total: totalTickets,
-        open: openTickets,
-        inProgress: inProgressTickets,
-        resolved: resolvedTickets,
+        total,
+        open,
+        inProgress,
+        resolved,
+        TO: TOStats,
         categories,
         priorities
       }
     });
   } catch (err) {
     console.error(err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// @desc    Assign ticket to TO
+// @route   PUT /api/tickets/:id/assign
+// @access  Private/Admin
+exports.assignTicket = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { assignedTo, TOYear } = req.body;
+
+    // Verify TO exists and has correct role
+    const to = await User.findById(assignedTo);
+    if (!to || !to.role.startsWith('TO')) {
+      return res.status(400).json({ msg: 'Invalid TO user' });
+    }
+
+    // Verify TO year matches role
+    if (to.role !== `TO${TOYear}`) {
+      return res.status(400).json({ msg: 'TO year does not match role' });
+    }
+
+    let ticket = await Ticket.findById(req.params.id);
+
+    if (!ticket) {
+      return res.status(404).json({ msg: 'Ticket not found' });
+    }
+
+    ticket = await Ticket.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          assignedTo,
+          TOYear,
+          status: 'In Progress'
+        }
+      },
+      { new: true, runValidators: true }
+    ).populate('user', 'name email').populate('assignedTo', 'name role');
+
+    res.json({
+      success: true,
+      data: ticket
+    });
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Ticket not found' });
+    }
     res.status(500).json({ msg: 'Server error' });
   }
 }; 
