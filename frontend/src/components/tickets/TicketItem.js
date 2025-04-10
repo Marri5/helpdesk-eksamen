@@ -3,15 +3,17 @@ import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import Moment from 'react-moment';
 
-const TicketItem = ({ ticket, isAdmin = false }) => {
+const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Open':
-        return 'bg-danger';
-      case 'In Progress':
-        return 'bg-warning';
-      case 'Resolved':
-        return 'bg-success';
+      case 'new':
+        return 'bg-blue-500';
+      case 'in_progress':
+        return 'bg-yellow-500';
+      case 'escalated':
+        return 'bg-red-500';
+      case 'resolved':
+        return 'bg-green-500';
       default:
         return 'bg-gray-500';
     }
@@ -19,12 +21,12 @@ const TicketItem = ({ ticket, isAdmin = false }) => {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'High':
-        return 'bg-danger';
-      case 'Medium':
-        return 'bg-warning';
-      case 'Low':
-        return 'bg-info';
+      case 'high':
+        return 'bg-red-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      case 'low':
+        return 'bg-blue-500';
       default:
         return 'bg-gray-500';
     }
@@ -48,10 +50,10 @@ const TicketItem = ({ ticket, isAdmin = false }) => {
           </div>
           <div className="flex space-x-2">
             <span className={`${getStatusColor(ticket.status)} text-white text-xs px-2 py-1 rounded`}>
-              {ticket.status}
+              {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
             </span>
             <span className={`${getPriorityColor(ticket.priority)} text-white text-xs px-2 py-1 rounded`}>
-              {ticket.priority}
+              {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
             </span>
           </div>
         </div>
@@ -73,9 +75,16 @@ const TicketItem = ({ ticket, isAdmin = false }) => {
               <span>Student: {ticket.studentName} | Class: {ticket.studentClass}</span>
             </div>
           )}
-          {isAdmin && ticket.user && (
+          {ticket.assignedTo && (
             <div className="text-sm text-gray-500">
-              Submitted by: {ticket.user.name}
+              <span className="font-semibold">Assigned to:</span>{' '}
+              {ticket.assignedTo.name} ({ticket.supportLevel})
+            </div>
+          )}
+          {ticket.comments && ticket.comments.length > 0 && (
+            <div className="text-sm text-gray-500">
+              <i className="fas fa-comment-alt mr-1"></i>
+              {ticket.comments.length} comment{ticket.comments.length !== 1 ? 's' : ''}
             </div>
           )}
         </div>
@@ -87,10 +96,13 @@ const TicketItem = ({ ticket, isAdmin = false }) => {
         >
           View Details
         </Link>
-        {ticket.comments && ticket.comments.length > 0 && (
-          <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">
-            {ticket.comments.length} comments
-          </span>
+        {showEscalate && ticket.status !== 'escalated' && ticket.supportLevel !== 'secondline' && (
+          <button
+            onClick={onEscalate}
+            className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+          >
+            Escalate to 2nd Line
+          </button>
         )}
       </div>
     </div>
@@ -99,7 +111,8 @@ const TicketItem = ({ ticket, isAdmin = false }) => {
 
 TicketItem.propTypes = {
   ticket: PropTypes.object.isRequired,
-  isAdmin: PropTypes.bool
+  showEscalate: PropTypes.bool,
+  onEscalate: PropTypes.func
 };
 
 export default TicketItem; 

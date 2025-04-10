@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../config/axios';
 import Moment from 'react-moment';
 import { AuthContext } from '../../context/AuthContext';
 import { AlertContext } from '../../context/AlertContext';
@@ -20,13 +20,14 @@ const TicketDetails = () => {
   useEffect(() => {
     const getTicket = async () => {
       try {
-        const res = await axios.get(`/tickets/${id}`);
+        const res = await axiosInstance.get(`/tickets/${id}`);
         setTicket(res.data.data);
         setStatus(res.data.data.status);
         setPriority(res.data.data.priority);
         setLoading(false);
       } catch (err) {
-        setAlert('Failed to fetch ticket details', 'danger');
+        console.error('Error fetching ticket:', err);
+        setAlert(err.response?.data?.msg || 'Failed to fetch ticket details', 'danger');
         navigate('/dashboard');
       }
     };
@@ -36,40 +37,43 @@ const TicketDetails = () => {
 
   const onCommentSubmit = async (e) => {
     e.preventDefault();
-    if (commentText === '') {
+    if (commentText.trim() === '') {
       setAlert('Please enter a comment', 'danger');
       return;
     }
 
     try {
-      const res = await axios.post(`/tickets/${id}/comments`, { text: commentText });
-      setTicket({ ...ticket, comments: res.data.data });
+      const res = await axiosInstance.post(`/tickets/${id}/comments`, { text: commentText });
+      setTicket(res.data.data);
       setCommentText('');
       setAlert('Comment added successfully', 'success');
     } catch (err) {
-      setAlert('Failed to add comment', 'danger');
+      console.error('Error adding comment:', err);
+      setAlert(err.response?.data?.msg || 'Failed to add comment', 'danger');
     }
   };
 
   const onStatusChange = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(`/tickets/${id}`, { status });
+      const res = await axiosInstance.put(`/tickets/${id}`, { status });
       setTicket(res.data.data);
       setAlert('Ticket status updated successfully', 'success');
     } catch (err) {
-      setAlert('Failed to update ticket status', 'danger');
+      console.error('Error updating status:', err);
+      setAlert(err.response?.data?.msg || 'Failed to update ticket status', 'danger');
     }
   };
 
   const onPriorityChange = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(`/tickets/${id}`, { priority });
+      const res = await axiosInstance.put(`/tickets/${id}`, { priority });
       setTicket(res.data.data);
       setAlert('Ticket priority updated successfully', 'success');
     } catch (err) {
-      setAlert('Failed to update ticket priority', 'danger');
+      console.error('Error updating priority:', err);
+      setAlert(err.response?.data?.msg || 'Failed to update ticket priority', 'danger');
     }
   };
 

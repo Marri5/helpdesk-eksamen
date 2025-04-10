@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../config/axios';
 import { AuthContext } from '../../context/AuthContext';
 import { AlertContext } from '../../context/AlertContext';
 import TicketItem from '../tickets/TicketItem';
@@ -14,11 +14,12 @@ const UserDashboard = () => {
   useEffect(() => {
     const getTickets = async () => {
       try {
-        const res = await axios.get('/tickets');
+        const res = await axiosInstance.get('/tickets');
         setTickets(res.data.data);
         setLoading(false);
       } catch (err) {
-        setAlert('Failed to fetch tickets', 'danger');
+        console.error('Error fetching tickets:', err);
+        setAlert(err.response?.data?.msg || 'Failed to fetch tickets', 'danger');
         setLoading(false);
       }
     };
