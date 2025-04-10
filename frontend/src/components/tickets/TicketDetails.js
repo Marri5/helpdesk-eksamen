@@ -96,15 +96,43 @@ const TicketDetails = () => {
     }
   };
 
+  const handleDeleteTicket = async () => {
+    if (!window.confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await axiosInstance.delete(`/tickets/${id}`);
+      setAlert('Ticket deleted successfully', 'success');
+      navigate('/admin');
+    } catch (err) {
+      console.error('Error deleting ticket:', err);
+      setAlert(err.response?.data?.msg || 'Failed to delete ticket', 'danger');
+    }
+  };
+
+  if (loading || !ticket || !user) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex justify-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
   const isSupport = user?.role === 'firstline' || user?.role === 'secondline';
-  const canAssign = isSupport && !ticket.assignedTo;
+  const canAssign = isSupport && !ticket?.assignedTo;
   const isAdmin = user?.role === 'admin';
-  const isAssignedToMe = ticket.assignedTo?._id === user?._id;
-  const canResolve = isAssignedToMe && ticket.status !== 'resolved';
+  
+  const isAssignedToMe = ticket?.assignedTo?._id === user?._id;
+  const canResolve = isAssignedToMe && ticket?.status !== 'resolved';
+  const canDelete = isAdmin && ticket?.status === 'resolved';
 
   const handleResolveTicket = async () => {
     try {
-      const res = await axiosInstance.put(`/tickets/${id}`, { status: 'resolved' });
+      const res = await axiosInstance.put(`/tickets/${id}`, { 
+        status: 'resolved',
+        ...(ticket.status === 'new' && { status: 'in_progress' })
+      });
       setTicket(res.data.data);
       setStatus('resolved');
       setAlert('Ticket marked as resolved successfully', 'success');
@@ -143,14 +171,6 @@ const TicketDetails = () => {
         return 'bg-gray-500';
     }
   };
-
-  if (loading || !ticket || !user) {
-    return (
-      <div className="container mx-auto px-4 py-8 flex justify-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -331,6 +351,19 @@ const TicketDetails = () => {
                     </button>
                   </form>
                 </div>
+                {canDelete && (
+                  <div className="mt-6 border-t pt-4">
+                    <button
+                      onClick={handleDeleteTicket}
+                      className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition-colors flex items-center"
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete Ticket
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
