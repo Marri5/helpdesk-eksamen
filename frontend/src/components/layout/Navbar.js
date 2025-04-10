@@ -18,21 +18,22 @@ const Navbar = () => {
 
   const authLinks = (
     <div className="flex flex-col md:flex-row md:ml-auto">
-      {user && user.role === 'admin' && (
+      {user && user.role === 'admin' ? (
         <Link 
           to="/admin" 
           className="px-4 py-2 text-white hover:text-gray-200"
         >
-          Admin Dashboard
+          Dashboard
+        </Link>
+      ) : (
+        <Link 
+          to="/dashboard" 
+          className="px-4 py-2 text-white hover:text-gray-200"
+        >
+          <span className="hidden md:inline">Dashboard</span>
+          <span className="md:hidden">Dashboard</span>
         </Link>
       )}
-      <Link 
-        to="/dashboard" 
-        className="px-4 py-2 text-white hover:text-gray-200"
-      >
-        <span className="hidden md:inline">Dashboard</span>
-        <span className="md:hidden">Dashboard</span>
-      </Link>
       <button
         onClick={onLogout}
         className="px-4 py-2 text-white hover:text-gray-200 text-left"

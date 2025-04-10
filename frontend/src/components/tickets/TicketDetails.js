@@ -142,7 +142,8 @@ const TicketDetails = () => {
                 <div className="flex items-center">
                   <span className="font-semibold mr-2">Status:</span>
                   <span className={`${getStatusColor(ticket.status)} text-white text-xs px-2 py-1 rounded`}>
-                    {ticket.status}
+                    {ticket.status === 'in_progress' ? 'In Progress' : 
+                     ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
                   </span>
                 </div>
                 <div className="flex items-center">
@@ -160,22 +161,7 @@ const TicketDetails = () => {
                   <span className="font-semibold">Submitted By:</span> {ticket.user && ticket.user.name}
                 </div>
               </div>
-              {ticket.isTO && (
-                <div className="bg-blue-50 p-4 rounded-lg mb-3">
-                  <h3 className="text-lg font-semibold text-blue-800 mb-2">Tilrettelagt Opplæring (TO) Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <span className="font-semibold">Year:</span> {ticket.TOYear}
-                    </div>
-                    <div>
-                      <span className="font-semibold">Student Name:</span> {ticket.studentName}
-                    </div>
-                    <div>
-                      <span className="font-semibold">Student Class:</span> {ticket.studentClass}
-                    </div>
-                  </div>
-                </div>
-              )}
+
               {user && (user.role === 'firstline' || user.role === 'secondline') && !ticket.assignedTo && (
                 <div className="mb-6">
                   <button
@@ -186,6 +172,7 @@ const TicketDetails = () => {
                   </button>
                 </div>
               )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
                   <span className="font-semibold">Created:</span>{' '}

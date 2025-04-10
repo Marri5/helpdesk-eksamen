@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -7,14 +7,15 @@ import Landing from './components/layout/Landing';
 import Register from './components/auth/Register';
 import Login from './components/auth/Login';
 import Alert from './components/layout/Alert';
-import UserDashboard from './components/dashboard/UserDashboard';
+import Dashboard from './components/dashboard/UserDashboard';
 import AdminDashboard from './components/dashboard/AdminDashboard';
 import SupportDashboard from './components/dashboard/SupportDashboard';
 import TicketForm from './components/tickets/TicketForm';
 import TicketDetails from './components/tickets/TicketDetails';
 import NotFound from './components/layout/NotFound';
+import PrivateRoute from './components/routing/PrivateRoute';
 
-import { AuthContext, AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { AlertProvider } from './context/AlertContext';
 
 import './App.css';
@@ -22,105 +23,63 @@ import './App.css';
 axios.defaults.baseURL = 'http://10.12.3.77:5000/api';
 axios.defaults.withCredentials = true;
 
-const PrivateRoute = ({ element, allowedRoles }) => {
-  const { isAuthenticated, loading, user } = useContext(AuthContext);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" />;
-  }
-
-  // Redirect users to their appropriate dashboards
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    switch (user.role) {
-      case 'admin':
-        return <Navigate to="/admin" />;
-      case 'firstline':
-      case 'secondline':
-        return <Navigate to="/support" />;
-      default:
-        return <Navigate to="/dashboard" />;
-    }
-  }
-
-  return element;
-};
-
 const App = () => {
   return (
     <AuthProvider>
       <AlertProvider>
         <Router>
-          <div className="App">
+          <div className="min-h-screen bg-gray-100">
             <Navbar />
             <Alert />
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
-              
-              {/* Regular user dashboard */}
-              <Route 
-                path="/dashboard" 
+              <Route
+                path="/dashboard"
                 element={
-                  <PrivateRoute 
-                    element={<UserDashboard />} 
-                    allowedRoles={['user']} 
-                  />
-                } 
+                  <PrivateRoute>
+                    {({ user }) => {
+                      if (user.role === 'admin') {
+                        return <Navigate to="/admin" />;
+                      } else if (user.role === 'firstline' || user.role === 'secondline') {
+                        return <SupportDashboard />;
+                      } else {
+                        return <Dashboard />;
+                      }
+                    }}
+                  </PrivateRoute>
+                }
               />
-              
-              {/* Admin dashboard */}
-              <Route 
-                path="/admin" 
+              <Route
+                path="/admin"
                 element={
-                  <PrivateRoute 
-                    element={<AdminDashboard />} 
-                    allowedRoles={['admin']} 
-                  />
-                } 
+                  <PrivateRoute>
+                    {({ user }) => {
+                      if (user.role !== 'admin') {
+                        return <Navigate to="/dashboard" />;
+                      }
+                      return <AdminDashboard />;
+                    }}
+                  </PrivateRoute>
+                }
               />
-
-              {/* Support staff dashboard */}
-              <Route 
-                path="/support" 
+              <Route
+                path="/tickets/new"
                 element={
-                  <PrivateRoute 
-                    element={<SupportDashboard />} 
-                    allowedRoles={['firstline', 'secondline']} 
-                  />
-                } 
+                  <PrivateRoute>
+                    <TicketForm />
+                  </PrivateRoute>
+                }
               />
-              
-              {/* Ticket creation - only regular users can create tickets */}
-              <Route 
-                path="/tickets/new" 
+              <Route
+                path="/tickets/:id"
                 element={
-                  <PrivateRoute 
-                    element={<TicketForm />} 
-                    allowedRoles={['user']} 
-                  />
-                } 
+                  <PrivateRoute>
+                    <TicketDetails />
+                  </PrivateRoute>
+                }
               />
-              
-              {/* Ticket details - accessible by all authenticated users */}
-              <Route 
-                path="/tickets/:id" 
-                element={
-                  <PrivateRoute 
-                    element={<TicketDetails />} 
-                    allowedRoles={['user', 'admin', 'firstline', 'secondline']} 
-                  />
-                } 
-              />
-              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

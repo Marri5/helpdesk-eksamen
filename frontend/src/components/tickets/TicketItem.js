@@ -42,15 +42,11 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
                 {ticket.title}
               </Link>
             </h3>
-            {ticket.isTO && (
-              <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                TO - Year {ticket.TOYear}
-              </span>
-            )}
           </div>
           <div className="flex space-x-2">
             <span className={`${getStatusColor(ticket.status)} text-white text-xs px-2 py-1 rounded`}>
-              {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+              {ticket.status === 'in_progress' ? 'In Progress' : 
+               ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
             </span>
             <span className={`${getPriorityColor(ticket.priority)} text-white text-xs px-2 py-1 rounded`}>
               {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
@@ -70,11 +66,6 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
               Created: <Moment format="YYYY-MM-DD HH:mm">{ticket.createdAt}</Moment>
             </span>
           </div>
-          {ticket.isTO && (
-            <div className="text-sm text-gray-500">
-              <span>Student: {ticket.studentName} | Class: {ticket.studentClass}</span>
-            </div>
-          )}
           {ticket.assignedTo && (
             <div className="text-sm text-gray-500">
               <span className="font-semibold">Assigned to:</span>{' '}
