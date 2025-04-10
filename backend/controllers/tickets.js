@@ -44,9 +44,12 @@ exports.getTickets = async (req, res) => {
 exports.getTicket = async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id)
-      .populate('user', 'name email')
-      .populate('assignedTo', 'name role')
-      .populate('comments.user', 'name role');
+      .populate('user', 'name email role')
+      .populate('assignedTo', 'name email role')
+      .populate({
+        path: 'comments.user',
+        select: 'name email role'
+      });
 
     if (!ticket) {
       return res.status(404).json({ msg: 'Ticket not found' });
@@ -58,12 +61,15 @@ exports.getTicket = async (req, res) => {
     // 3. User is support staff
     const hasAccess = 
       req.user.role === 'admin' ||
-      ticket.user.toString() === req.user.id ||
+      ticket.user._id.toString() === req.user.id ||
       ['firstline', 'secondline'].includes(req.user.role);
 
     if (!hasAccess) {
       return res.status(401).json({ msg: 'Not authorized to view this ticket' });
     }
+
+    // Sort comments by newest first
+    ticket.comments.sort((a, b) => b.createdAt - a.createdAt);
 
     res.json({
       success: true,
@@ -201,7 +207,13 @@ exports.addComment = async (req, res) => {
   }
 
   try {
-    const ticket = await Ticket.findById(req.params.id);
+    const ticket = await Ticket.findById(req.params.id)
+      .populate('user', 'name email role')
+      .populate('assignedTo', 'name email role')
+      .populate({
+        path: 'comments.user',
+        select: 'name email role'
+      });
 
     if (!ticket) {
       return res.status(404).json({ msg: 'Ticket not found' });
@@ -213,7 +225,7 @@ exports.addComment = async (req, res) => {
     // 3. User is support staff
     const canComment = 
       req.user.role === 'admin' ||
-      ticket.user.toString() === req.user.id ||
+      ticket.user._id.toString() === req.user.id ||
       ['firstline', 'secondline'].includes(req.user.role);
 
     if (!canComment) {
@@ -222,17 +234,26 @@ exports.addComment = async (req, res) => {
 
     const newComment = {
       text: req.body.text,
-      user: req.user.id
+      user: req.user.id,
+      createdAt: Date.now()
     };
 
+    // Add the comment and update the ticket's updatedAt timestamp
     ticket.comments.unshift(newComment);
+    ticket.updatedAt = Date.now();
     await ticket.save();
 
-    // Return populated ticket
+    // Return populated ticket with sorted comments
     const populatedTicket = await Ticket.findById(req.params.id)
-      .populate('user', 'name email')
-      .populate('assignedTo', 'name role')
-      .populate('comments.user', 'name role');
+      .populate('user', 'name email role')
+      .populate('assignedTo', 'name email role')
+      .populate({
+        path: 'comments.user',
+        select: 'name email role'
+      });
+
+    // Sort comments by newest first
+    populatedTicket.comments.sort((a, b) => b.createdAt - a.createdAt);
 
     res.json({
       success: true,
