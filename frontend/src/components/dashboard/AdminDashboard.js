@@ -16,15 +16,13 @@ const AdminDashboard = () => {
     open: 0,
     inProgress: 0,
     resolved: 0,
-    TO: {
+    support: {
       total: 0,
-      firstYear: 0,
-      secondYear: 0,
+      firstline: 0,
+      secondline: 0,
       resolved: 0,
-      pending: 0
-    },
-    categories: [],
-    priorities: []
+      escalated: 0
+    }
   });
   const [loading, setLoading] = useState(true);
   const [statLoading, setStatLoading] = useState(true);
@@ -33,7 +31,7 @@ const AdminDashboard = () => {
   const [filterOptions, setFilterOptions] = useState({
     status: '',
     priority: '',
-    TOYear: '',
+    supportLevel: '',
     assignedTo: ''
   });
 
@@ -64,12 +62,12 @@ const AdminDashboard = () => {
           open: 0,
           inProgress: 0,
           resolved: 0,
-          TO: {
+          support: {
             total: 0,
-            firstYear: 0,
-            secondYear: 0,
+            firstline: 0,
+            secondline: 0,
             resolved: 0,
-            pending: 0
+            escalated: 0
           }
         });
         setUsers(usersRes.data.data || []);
@@ -116,15 +114,15 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleAssignTicket = async (ticketId, userId, TOYear) => {
+  const handleAssignTicket = async (ticketId, userId, supportLevel) => {
     try {
       const res = await axiosInstance.put(`/tickets/${ticketId}/assign`, {
         assignedTo: userId,
-        TOYear
+        supportLevel
       });
       if (res.data.success) {
         setTickets(tickets.map(t =>
-          t._id === ticketId ? { ...t, assignedTo: userId, TOYear } : t
+          t._id === ticketId ? { ...t, assignedTo: userId, supportLevel } : t
         ));
         setAlert('Ticket assigned successfully', 'success');
       }
@@ -138,7 +136,7 @@ const AdminDashboard = () => {
     return tickets.filter(ticket => {
       if (filterOptions.status && ticket.status !== filterOptions.status) return false;
       if (filterOptions.priority && ticket.priority !== filterOptions.priority) return false;
-      if (filterOptions.TOYear && ticket.TOYear !== filterOptions.TOYear) return false;
+      if (filterOptions.supportLevel && ticket.supportLevel !== filterOptions.supportLevel) return false;
       if (filterOptions.assignedTo && ticket.assignedTo !== filterOptions.assignedTo) return false;
       return true;
     });
@@ -195,27 +193,27 @@ const AdminDashboard = () => {
           </div>
 
           <div className="bg-blue-50 p-6 rounded-lg shadow-sm mb-8">
-            <h3 className="text-lg font-semibold mb-4 text-blue-800">TO Statistics</h3>
+            <h3 className="text-lg font-semibold mb-4 text-blue-800">Support Statistics</h3>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="bg-white rounded-lg p-4 shadow-sm">
-                <h4 className="font-semibold text-blue-800">Total TO</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.total || 0}</p>
+                <h4 className="font-semibold text-blue-800">Total Support Staff</h4>
+                <p className="text-2xl font-bold text-blue-600">{stats?.support?.total || 0}</p>
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm">
-                <h4 className="font-semibold text-blue-800">1st Year</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.firstYear || 0}</p>
+                <h4 className="font-semibold text-blue-800">First-line</h4>
+                <p className="text-2xl font-bold text-blue-600">{stats?.support?.firstline || 0}</p>
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm">
-                <h4 className="font-semibold text-blue-800">2nd Year</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.secondYear || 0}</p>
+                <h4 className="font-semibold text-blue-800">Second-line</h4>
+                <p className="text-2xl font-bold text-blue-600">{stats?.support?.secondline || 0}</p>
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-semibold text-blue-800">Resolved</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.resolved || 0}</p>
+                <p className="text-2xl font-bold text-blue-600">{stats?.support?.resolved || 0}</p>
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm">
-                <h4 className="font-semibold text-blue-800">Pending</h4>
-                <p className="text-2xl font-bold text-blue-600">{stats?.TO?.pending || 0}</p>
+                <h4 className="font-semibold text-blue-800">Escalated</h4>
+                <p className="text-2xl font-bold text-blue-600">{stats?.support?.escalated || 0}</p>
               </div>
             </div>
           </div>
@@ -283,9 +281,10 @@ const AdminDashboard = () => {
           onChange={(e) => setFilterOptions({...filterOptions, status: e.target.value})}
         >
           <option value="">All Statuses</option>
-          <option value="Open">Open</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Resolved">Resolved</option>
+          <option value="new">New</option>
+          <option value="in_progress">In Progress</option>
+          <option value="escalated">Escalated</option>
+          <option value="resolved">Resolved</option>
         </select>
 
         <select
@@ -294,19 +293,19 @@ const AdminDashboard = () => {
           onChange={(e) => setFilterOptions({...filterOptions, priority: e.target.value})}
         >
           <option value="">All Priorities</option>
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
         </select>
 
         <select
           className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-          value={filterOptions.TOYear}
-          onChange={(e) => setFilterOptions({...filterOptions, TOYear: e.target.value})}
+          value={filterOptions.supportLevel}
+          onChange={(e) => setFilterOptions({...filterOptions, supportLevel: e.target.value})}
         >
-          <option value="">All TO Years</option>
-          <option value="1">1st Year</option>
-          <option value="2">2nd Year</option>
+          <option value="">All Support Levels</option>
+          <option value="firstline">First-line Support</option>
+          <option value="secondline">Second-line Support</option>
         </select>
 
         <select
@@ -315,9 +314,13 @@ const AdminDashboard = () => {
           onChange={(e) => setFilterOptions({...filterOptions, assignedTo: e.target.value})}
         >
           <option value="">All Assignees</option>
-          {users.filter(u => u.role.includes('TO')).map(to => (
-            <option key={to._id} value={to._id}>{to.name} ({to.role})</option>
-          ))}
+          {users
+            .filter(u => u.role === 'firstline' || u.role === 'secondline')
+            .map(support => (
+              <option key={support._id} value={support._id}>
+                {support.name} ({support.role === 'firstline' ? 'First-line' : 'Second-line'})
+              </option>
+            ))}
         </select>
       </div>
 
@@ -333,17 +336,22 @@ const AdminDashboard = () => {
                 <select
                   className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                   onChange={(e) => {
-                    const [userId, TOYear] = e.target.value.split('|');
-                    handleAssignTicket(ticket._id, userId, TOYear);
+                    const [userId, supportLevel] = e.target.value.split('|');
+                    handleAssignTicket(ticket._id, userId, supportLevel);
                   }}
-                  defaultValue=""
+                  value={ticket.assignedTo ? `${ticket.assignedTo}|${ticket.supportLevel}` : ""}
                 >
-                  <option value="">Assign TO</option>
-                  {users.filter(u => u.role.includes('TO')).map((to) => (
-                    <option key={to._id} value={`${to._id}|${to.role.slice(2)}`}>
-                      {to.name} (TO{to.role.slice(2)})
-                    </option>
-                  ))}
+                  <option value="">Assign Support</option>
+                  {users
+                    .filter(u => u.role === 'firstline' || u.role === 'secondline')
+                    .map((support) => (
+                      <option 
+                        key={support._id} 
+                        value={`${support._id}|${support.role}`}
+                      >
+                        {support.name} ({support.role === 'firstline' ? 'First-line' : 'Second-line'})
+                      </option>
+                    ))}
                 </select>
               </div>
               <TicketItem ticket={ticket} isAdmin={true} />
