@@ -51,10 +51,10 @@ router.put('/:id', updateTicket);
 
 // @route   PUT /api/tickets/:id/assign
 // @desc    Assign ticket to TO
-// @access  Private/Admin
+// @access  Private/Support
 router.put(
   '/:id/assign',
-  authorize('admin'),
+  authorize('admin', 'firstline', 'secondline'),
   [
     check('assignedTo', 'Assigned user ID is required').not().isEmpty(),
     check('supportLevel', 'Support level must be either firstline or secondline').isIn(['firstline', 'secondline'])

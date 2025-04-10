@@ -278,7 +278,7 @@ exports.getTicketStats = async (req, res) => {
 
 // @desc    Assign ticket to support staff
 // @route   PUT /api/tickets/:id/assign
-// @access  Private/Admin
+// @access  Private/Support
 exports.assignTicket = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -288,21 +288,40 @@ exports.assignTicket = async (req, res) => {
   try {
     const { assignedTo, supportLevel } = req.body;
 
-    // Verify the assigned user exists and has the correct role
-    const assignedUser = await User.findById(assignedTo);
-    if (!assignedUser) {
-      return res.status(404).json({ msg: 'Assigned user not found' });
-    }
-
-    if (assignedUser.role !== supportLevel) {
-      return res.status(400).json({ 
-        msg: `User must be a ${supportLevel} support staff to be assigned this ticket` 
-      });
-    }
-
+    // Get the ticket first
     let ticket = await Ticket.findById(req.params.id);
     if (!ticket) {
       return res.status(404).json({ msg: 'Ticket not found' });
+    }
+
+    // If ticket is already assigned, only admin can reassign
+    if (ticket.assignedTo && req.user.role !== 'admin') {
+      return res.status(403).json({ msg: 'Ticket is already assigned. Only admin can reassign tickets.' });
+    }
+
+    // For self-assignment (firstline/secondline support)
+    if (req.user.role !== 'admin') {
+      // Verify it's actually self-assignment
+      if (assignedTo !== req.user.id) {
+        return res.status(403).json({ msg: 'Support staff can only self-assign tickets' });
+      }
+      
+      // Verify the support level matches the user's role
+      if (supportLevel !== req.user.role) {
+        return res.status(400).json({ msg: 'Support level must match your role' });
+      }
+    } else {
+      // For admin assignments, verify the assigned user exists and has the correct role
+      const assignedUser = await User.findById(assignedTo);
+      if (!assignedUser) {
+        return res.status(404).json({ msg: 'Assigned user not found' });
+      }
+
+      if (assignedUser.role !== supportLevel) {
+        return res.status(400).json({ 
+          msg: `User must be a ${supportLevel} support staff to be assigned this ticket` 
+        });
+      }
     }
 
     // Update ticket with assignment and support level

@@ -7,8 +7,7 @@ const axiosInstance = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
-    withCredentials: true,
-    credentials: 'include'
+    withCredentials: true
 });
 
 // Request interceptor to add auth token to requests
@@ -29,13 +28,18 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
-        if (error.response?.status === 401) {
+        const originalRequest = error.config;
+
+        // Handle token expiration
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            
             // Clear invalid token
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             
-            // Only redirect to login if not already there
-            if (!window.location.pathname.includes('/login')) {
+            // Only redirect to login if not already there and not trying to login
+            if (!window.location.pathname.includes('/login') && !originalRequest.url.includes('/auth/login')) {
                 window.location.href = '/login';
             }
         }

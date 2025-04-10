@@ -6,54 +6,70 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Initialize auth state
   useEffect(() => {
-    const loadUser = async () => {
-      if (localStorage.token) {
-        try {
-          const res = await axiosInstance.get('/auth/me');
-          setUser(res.data.data);
-          setIsAuthenticated(true);
-          setLoading(false);
-        } catch (err) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setToken(null);
-          setUser(null);
-          setIsAuthenticated(false);
-          setError(err.response?.data?.msg || 'Authentication failed');
-          setLoading(false);
-        }
-      } else {
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem('token');
+      
+      if (!storedToken) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await axiosInstance.get('/auth/me');
+        setUser(res.data.data);
+        setIsAuthenticated(true);
+      } catch (err) {
+        console.error('Auth initialization error:', err);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+        setIsAuthenticated(false);
+        setError('Session expired. Please login again.');
+      } finally {
         setLoading(false);
       }
     };
 
-    loadUser();
+    initializeAuth();
   }, []);
+
+  const updateAuthState = (token, userData) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setToken(token);
+    setUser(userData);
+    setIsAuthenticated(true);
+    setError(null);
+  };
+
+  const clearAuthState = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
+  };
 
   const register = async (formData) => {
     setLoading(true);
+    setError(null);
+    
     try {
       const res = await axiosInstance.post('/auth/register', formData);
-      
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      
-      setToken(res.data.token);
-      setUser(res.data.user);
-      setIsAuthenticated(true);
-      setLoading(false);
-      setError(null);
-      
+      updateAuthState(res.data.token, res.data.user);
       return res.data;
     } catch (err) {
       setError(err.response?.data?.msg || 'Registration failed');
-      setLoading(false);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,32 +81,21 @@ export const AuthProvider = ({ children }) => {
       const res = await axiosInstance.post('/auth/login', formData);
       
       if (res.data.success && res.data.token) {
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.user));
-        
-        setToken(res.data.token);
-        setUser(res.data.user);
-        setIsAuthenticated(true);
-        setError(null);
+        updateAuthState(res.data.token, res.data.user);
       } else {
         throw new Error('Invalid response from server');
       }
     } catch (err) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
+      clearAuthState();
       
-      // Handle rate limiting error specifically
       if (err.response?.status === 429) {
-        const retryAfter = err.response.headers['retry-after'] || 60; // Default to 60 seconds if header not present
+        const retryAfter = err.response.headers['retry-after'] || 60;
         setError(`Too many login attempts. Please try again in ${retryAfter} seconds.`);
-        // Store the timestamp when we can retry
         localStorage.setItem('loginCooldown', (Date.now() + (retryAfter * 1000)).toString());
       } else {
         setError(err.response?.data?.msg || 'Login failed. Please check your credentials.');
       }
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -100,14 +105,10 @@ export const AuthProvider = ({ children }) => {
     try {
       await axiosInstance.get('/auth/logout');
     } catch (err) {
-      console.error(err.message);
+      console.error('Logout error:', err.message);
+    } finally {
+      clearAuthState();
     }
-    
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
   };
 
   return (
