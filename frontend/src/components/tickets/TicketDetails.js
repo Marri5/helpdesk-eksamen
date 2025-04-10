@@ -37,7 +37,7 @@ const TicketDetails = () => {
 
   const onCommentSubmit = async (e) => {
     e.preventDefault();
-    if (commentText.trim() === '') {
+    if (!commentText?.trim()) {
       setAlert('Please enter a comment', 'danger');
       return;
     }
@@ -78,6 +78,11 @@ const TicketDetails = () => {
   };
 
   const handleSelfAssign = async () => {
+    if (!user?._id || !user?.role) {
+      setAlert('User information not available', 'danger');
+      return;
+    }
+
     try {
       const res = await axiosInstance.put(`/tickets/${id}/assign`, {
         assignedTo: user._id,
@@ -121,13 +126,17 @@ const TicketDetails = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !ticket || !user) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
       </div>
     );
   }
+
+  const isSupport = user?.role === 'firstline' || user?.role === 'secondline';
+  const canAssign = isSupport && !ticket.assignedTo;
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -162,7 +171,7 @@ const TicketDetails = () => {
                 </div>
               </div>
 
-              {user && (user.role === 'firstline' || user.role === 'secondline') && !ticket.assignedTo && (
+              {canAssign && (
                 <div className="mb-6">
                   <button
                     onClick={handleSelfAssign}
@@ -216,19 +225,19 @@ const TicketDetails = () => {
                 {ticket.comments && ticket.comments.length > 0 ? (
                   ticket.comments.map((comment, index) => (
                     <div key={index} className={`p-4 rounded-lg ${
-                      comment.user._id === user._id ? 'bg-blue-50 border-l-4 border-blue-500' : 'bg-gray-50 border-l-4 border-gray-500'
+                      comment.user?._id === user._id ? 'bg-blue-50 border-l-4 border-blue-500' : 'bg-gray-50 border-l-4 border-gray-500'
                     }`}>
                       <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center">
-                          <span className="font-semibold mr-2">{comment.user.name}</span>
+                          <span className="font-semibold mr-2">{comment.user?.name || 'Unknown User'}</span>
                           <span className={`text-xs px-2 py-0.5 rounded ${
-                            comment.user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                            comment.user.role.includes('line') ? 'bg-green-100 text-green-800' :
+                            comment.user?.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                            comment.user?.role?.includes('line') ? 'bg-green-100 text-green-800' :
                             'bg-blue-100 text-blue-800'
                           }`}>
-                            {comment.user.role === 'firstline' ? 'First-line Support' :
-                             comment.user.role === 'secondline' ? 'Second-line Support' :
-                             comment.user.role.charAt(0).toUpperCase() + comment.user.role.slice(1)}
+                            {comment.user?.role === 'firstline' ? 'First-line Support' :
+                             comment.user?.role === 'secondline' ? 'Second-line Support' :
+                             comment.user?.role?.charAt(0).toUpperCase() + comment.user?.role?.slice(1) || 'User'}
                           </span>
                         </div>
                         <span className="text-sm text-gray-500">

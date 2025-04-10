@@ -42,19 +42,23 @@ exports.getTicket = async (req, res) => {
     const ticket = await Ticket.findById(req.params.id)
       .populate('user', 'name email')
       .populate('assignedTo', 'name role')
-      .populate('comments.user', 'name');
+      .populate('comments.user', 'name role');
 
     if (!ticket) {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Make sure user has access to this ticket
-    if (
-      ticket.user.toString() !== req.user.id &&
-      req.user.role === 'user' &&
-      (!req.user.role.startsWith('TO') || ticket.assignedTo?.toString() !== req.user.id)
-    ) {
-      return res.status(401).json({ msg: 'Not authorized' });
+    // Check if user has access to this ticket:
+    // 1. User is admin (always has access)
+    // 2. User owns the ticket
+    // 3. User is support staff
+    const hasAccess = 
+      req.user.role === 'admin' ||
+      ticket.user.toString() === req.user.id ||
+      ['firstline', 'secondline'].includes(req.user.role);
+
+    if (!hasAccess) {
+      return res.status(401).json({ msg: 'Not authorized to view this ticket' });
     }
 
     res.json({
@@ -199,19 +203,32 @@ exports.addComment = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
+    // Check if user can comment on this ticket:
+    // 1. User is admin
+    // 2. User owns the ticket
+    // 3. User is support staff
+    const canComment = 
+      req.user.role === 'admin' ||
+      ticket.user.toString() === req.user.id ||
+      ['firstline', 'secondline'].includes(req.user.role);
+
+    if (!canComment) {
+      return res.status(401).json({ msg: 'Not authorized to comment on this ticket' });
+    }
+
     const newComment = {
       text: req.body.text,
       user: req.user.id
     };
 
     ticket.comments.unshift(newComment);
-
     await ticket.save();
 
+    // Return populated ticket
     const populatedTicket = await Ticket.findById(req.params.id)
       .populate('user', 'name email')
       .populate('assignedTo', 'name role')
-      .populate('comments.user', 'name');
+      .populate('comments.user', 'name role');
 
     res.json({
       success: true,
