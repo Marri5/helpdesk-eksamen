@@ -2,10 +2,12 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../config/axios';
 import { AlertContext } from '../../context/AlertContext';
+import { AuthContext } from '../../context/AuthContext';
 
 const TicketForm = () => {
   const navigate = useNavigate();
   const { setAlert } = useContext(AlertContext);
+  const { user } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -28,10 +30,19 @@ const TicketForm = () => {
     }
 
     try {
-      await axiosInstance.post('/tickets', formData);
+      const ticketData = {
+        title,
+        description,
+        category,
+        priority: 'medium',
+        status: 'new'
+      };
+      
+      await axiosInstance.post('/tickets', ticketData);
       setAlert('Ticket created successfully', 'success');
       navigate('/dashboard');
     } catch (err) {
+      console.error('Error creating ticket:', err);
       const errorMsg = err.response?.data?.msg || 'Error creating ticket';
       setAlert(errorMsg, 'danger');
     }
