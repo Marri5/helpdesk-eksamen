@@ -52,10 +52,10 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="border-b border-gray-200 bg-gray-50 p-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
+    <div className="w-full">
+      <div className="flex flex-col space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center space-x-2 mb-2 sm:mb-0">
             <h3 className="text-lg font-semibold">
               <Link to={`/tickets/${ticket._id}`} className="text-primary hover:text-blue-700">
                 {ticket.title}
@@ -67,7 +67,7 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
               )}
             </h3>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <span className={`${getStatusColor(ticket.status)} text-white text-xs px-2 py-1 rounded`}>
               {ticket.status === 'in_progress' ? 'In Progress' : 
                ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
@@ -77,14 +77,14 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
             </span>
           </div>
         </div>
-      </div>
-      <div className="p-4">
-        <p className="text-gray-700 mb-3">
+        
+        <p className="text-gray-700">
           {ticket.description.substring(0, 100)}
           {ticket.description.length > 100 && '...'}
         </p>
-        <div className="flex flex-col space-y-1">
-          <div className="flex justify-between text-sm text-gray-500">
+        
+        <div className="flex flex-col space-y-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm text-gray-500">
             <span>Category: {ticket.category}</span>
             <span>
               Created: <Moment format="YYYY-MM-DD HH:mm">{ticket.createdAt}</Moment>
@@ -96,46 +96,48 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
               {ticket.assignedTo.name} ({ticket.supportLevel})
             </div>
           )}
-          {ticket.comments && ticket.comments.length > 0 && (
-            <div className="mt-2 p-3 bg-gray-50 rounded-md">
-              <div className="flex justify-between items-center text-sm text-gray-600 mb-1">
-                <div className="flex items-center">
-                  <i className="fas fa-comment-alt mr-1"></i>
-                  <span>Latest update from {ticket.comments[0].user.name}</span>
-                </div>
-                <Moment fromNow>{ticket.comments[0].createdAt}</Moment>
+        </div>
+        
+        {ticket.comments && ticket.comments.length > 0 && (
+          <div className="mt-2 p-3 bg-gray-50 rounded-md">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm text-gray-600 mb-1">
+              <div className="flex items-center mb-1 sm:mb-0">
+                <i className="fas fa-comment-alt mr-1"></i>
+                <span>Latest update from {ticket.comments[0].user.name}</span>
               </div>
-              <p className="text-sm text-gray-700 line-clamp-2">{ticket.comments[0].text}</p>
-              {ticket.comments.length > 1 && (
-                <div className="text-xs text-gray-500 mt-1">
-                  +{ticket.comments.length - 1} more {ticket.comments.length - 1 === 1 ? 'comment' : 'comments'}
-                </div>
-              )}
+              <Moment fromNow>{ticket.comments[0].createdAt}</Moment>
             </div>
+            <p className="text-sm text-gray-700 line-clamp-2">{ticket.comments[0].text}</p>
+            {ticket.comments.length > 1 && (
+              <div className="text-xs text-gray-500 mt-1">
+                +{ticket.comments.length - 1} more {ticket.comments.length - 1 === 1 ? 'comment' : 'comments'}
+              </div>
+            )}
+          </div>
+        )}
+        
+        <div className="flex flex-wrap items-center gap-3 mt-2">
+          <Link 
+            to={`/tickets/${ticket._id}`} 
+            className="flex items-center bg-primary text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+          >
+            <span>View & Respond</span>
+            {hasUnreadResponses() && (
+              <span className="ml-2 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              </span>
+            )}
+          </Link>
+          {showEscalate && ticket.status !== 'escalated' && ticket.supportLevel !== 'secondline' && (
+            <button
+              onClick={onEscalate}
+              className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+            >
+              Escalate to 2nd Line
+            </button>
           )}
         </div>
-      </div>
-      <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-        <Link 
-          to={`/tickets/${ticket._id}`} 
-          className="flex items-center bg-primary text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-        >
-          <span>View & Respond</span>
-          {hasUnreadResponses() && (
-            <span className="ml-2 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-            </span>
-          )}
-        </Link>
-        {showEscalate && ticket.status !== 'escalated' && ticket.supportLevel !== 'secondline' && (
-          <button
-            onClick={onEscalate}
-            className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
-          >
-            Escalate to 2nd Line
-          </button>
-        )}
       </div>
     </div>
   );

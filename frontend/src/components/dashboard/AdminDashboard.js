@@ -331,30 +331,36 @@ const AdminDashboard = () => {
       ) : filterTickets(tickets).length > 0 ? (
         <div className="space-y-4">
           {filterTickets(tickets).map((ticket) => (
-            <div key={ticket._id} className="relative">
-              <div className="absolute top-4 right-4">
-                <select
-                  className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                  onChange={(e) => {
-                    const [userId, supportLevel] = e.target.value.split('|');
-                    handleAssignTicket(ticket._id, userId, supportLevel);
-                  }}
-                  value={ticket.assignedTo ? `${ticket.assignedTo}|${ticket.supportLevel}` : ""}
-                >
-                  <option value="">Assign Support</option>
-                  {users
-                    .filter(u => u.role === 'firstline' || u.role === 'secondline')
-                    .map((support) => (
-                      <option 
-                        key={support._id} 
-                        value={`${support._id}|${support.role}`}
-                      >
-                        {support.name} ({support.role === 'firstline' ? 'First-line' : 'Second-line'})
-                      </option>
-                    ))}
-                </select>
+            <div key={ticket._id} className="relative bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="p-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                  <div className="mb-4 md:mb-0">
+                    <TicketItem ticket={ticket} isAdmin={true} />
+                  </div>
+                  <div className="w-full md:w-64">
+                    <select
+                      className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                      onChange={(e) => {
+                        const [userId, supportLevel] = e.target.value.split('|');
+                        handleAssignTicket(ticket._id, userId, supportLevel);
+                      }}
+                      value={ticket.assignedTo ? `${ticket.assignedTo}|${ticket.supportLevel}` : ""}
+                    >
+                      <option value="">Assign Support</option>
+                      {users
+                        .filter(u => u.role === 'firstline' || u.role === 'secondline')
+                        .map((support) => (
+                          <option 
+                            key={support._id} 
+                            value={`${support._id}|${support.role}`}
+                          >
+                            {support.name} ({support.role === 'firstline' ? 'First-line' : 'Second-line'})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
               </div>
-              <TicketItem ticket={ticket} isAdmin={true} />
             </div>
           ))}
         </div>
