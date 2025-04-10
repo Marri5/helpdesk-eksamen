@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../config/axios';
 import { AlertContext } from '../../context/AlertContext';
 
 const TicketForm = () => {
@@ -28,7 +28,7 @@ const TicketForm = () => {
     }
 
     try {
-      await axios.post('/tickets', formData);
+      await axiosInstance.post('/tickets', formData);
       setAlert('Ticket created successfully', 'success');
       navigate('/dashboard');
     } catch (err) {
