@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../../config/axios';
-import { AuthContext, useAuth } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 import { AlertContext } from '../../context/AlertContext';
 import TicketItem from '../tickets/TicketItem';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useContext(AuthContext);
   const { setAlert } = useContext(AlertContext);
   const [tickets, setTickets] = useState([]);
   const [users, setUsers] = useState([]);

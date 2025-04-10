@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axiosInstance from '../../config/axios';
-import { AuthContext, useAuth } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 import { AlertContext } from '../../context/AlertContext';
 import TicketItem from '../tickets/TicketItem';
 
 const SupportDashboard = () => {
-  const { user } = useAuth();
+  const { user } = useContext(AuthContext);
   const { setAlert } = useContext(AlertContext);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,10 +98,6 @@ const SupportDashboard = () => {
       setAlert(err.response?.data?.msg || 'Failed to escalate ticket', 'danger');
     }
   };
-
-  if (!user || user.role !== 'support') {
-    return <div>Access Denied</div>;
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">

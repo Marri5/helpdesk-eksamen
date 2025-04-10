@@ -1,139 +1,139 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import axiosInstance from '../../config/axios';
+import { AlertContext } from '../../context/AlertContext';
+import { AuthContext } from '../../context/AuthContext';
 
 const TicketForm = () => {
-    const navigate = useNavigate();
-    const { user } = useAuth();
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        priority: 'low',
-        category: 'technical'
-    });
-    const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { setAlert } = useContext(AlertContext);
+  const { user } = useContext(AuthContext);
 
-    const { title, description, priority, category } = formData;
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    category: ''
+  });
 
-    const onChange = e => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError(null);
-    };
+  const { title, description, category } = formData;
 
-    const onSubmit = async e => {
-        e.preventDefault();
-        try {
-            const response = await fetch('/api/tickets', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to create ticket');
-            }
+  const onChange = e => {
+    const value = e.target.value;
+    setFormData({ ...formData, [e.target.name]: value });
+  };
 
-            navigate('/dashboard');
-        } catch (err) {
-            setError(err.message);
-        }
-    };
-
-    if (!user) {
-        return <div>Please log in to create a ticket</div>;
+  const onSubmit = async e => {
+    e.preventDefault();
+    if (!title || !description || !category) {
+      setAlert('Please fill in all fields', 'danger');
+      return;
     }
 
-    return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="max-w-2xl mx-auto">
-                <h1 className="text-3xl font-bold mb-6">Create New Ticket</h1>
-                <form onSubmit={onSubmit} className="bg-white rounded-lg shadow-lg p-6">
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
-                            Title
-                        </label>
-                        <input
-                            type="text"
-                            id="title"
-                            name="title"
-                            value={title}
-                            onChange={onChange}
-                            required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Enter ticket title"
-                        />
-                    </div>
+    try {
+      const ticketData = {
+        title,
+        description,
+        category,
+        priority: 'medium',
+        status: 'new'
+      };
+      
+      const response = await axiosInstance.post('/tickets', ticketData);
+      console.log('Ticket created:', response.data);
+      setAlert('Ticket created successfully', 'success');
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Error creating ticket:', err.response?.data || err.message);
+      const errorMsg = err.response?.data?.msg || 'Error creating ticket';
+      setAlert(errorMsg, 'danger');
+    }
+  };
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
-                            Description
-                        </label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            value={description}
-                            onChange={onChange}
-                            required
-                            rows="4"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Describe your issue"
-                        />
-                    </div>
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-primary text-white p-4">
+            <h2 className="text-xl font-semibold flex items-center">
+              <i className="fas fa-ticket-alt mr-2"></i> Submit a New Ticket
+            </h2>
+          </div>
+          <div className="p-6">
+            <form onSubmit={onSubmit}>
+              <div className="mb-4">
+                <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={title}
+                  onChange={onChange}
+                  placeholder="Brief description of the issue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                  required
+                />
+              </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="priority">
-                            Priority
-                        </label>
-                        <select
-                            id="priority"
-                            name="priority"
-                            value={priority}
-                            onChange={onChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
+              <div className="mb-4">
+                <label htmlFor="category" className="block text-gray-700 text-sm font-bold mb-2">
+                  Category
+                </label>
+                <select
+                  id="category"
+                  name="category"
+                  value={category}
+                  onChange={onChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                  required
+                >
+                  <option value="">Select a category</option>
+                  <option value="Hardware">Hardware</option>
+                  <option value="Software">Software</option>
+                  <option value="Network">Network</option>
+                  <option value="Account">Account</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
 
-                    <div className="mb-6">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
-                            Category
-                        </label>
-                        <select
-                            id="category"
-                            name="category"
-                            value={category}
-                            onChange={onChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                            <option value="technical">Technical</option>
-                            <option value="billing">Billing</option>
-                            <option value="general">General</option>
-                        </select>
-                    </div>
+              <div className="mb-6">
+                <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows="5"
+                  value={description}
+                  onChange={onChange}
+                  placeholder="Detailed description of the issue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                  required
+                ></textarea>
+              </div>
 
-                    {error && (
-                        <div className="mb-4 text-red-500 text-sm text-center">
-                            {error}
-                        </div>
-                    )}
-
-                    <div className="flex justify-end">
-                        <button
-                            type="submit"
-                            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            Create Ticket
-                        </button>
-                    </div>
-                </form>
-            </div>
+              <div className="flex space-x-3">
+                <button
+                  type="submit"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                >
+                  Submit Ticket
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default TicketForm; 

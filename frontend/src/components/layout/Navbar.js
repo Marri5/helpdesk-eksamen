@@ -1,13 +1,13 @@
 import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleLogout = async () => {
+  const onLogout = async () => {
     await logout();
     navigate('/');
   };
@@ -35,7 +35,7 @@ const Navbar = () => {
         </Link>
       )}
       <button
-        onClick={handleLogout}
+        onClick={onLogout}
         className="px-4 py-2 text-white hover:text-gray-200 text-left"
       >
         <i className="fas fa-sign-out-alt mr-1"></i>
@@ -96,14 +96,14 @@ const Navbar = () => {
 
           {/* Desktop menu */}
           <div className="hidden md:block">
-            {user ? authLinks : guestLinks}
+            {isAuthenticated ? authLinks : guestLinks}
           </div>
         </div>
 
         {/* Mobile menu */}
         {isOpen && (
           <div className="md:hidden pb-4">
-            {user ? authLinks : guestLinks}
+            {isAuthenticated ? authLinks : guestLinks}
           </div>
         )}
       </div>
