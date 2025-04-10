@@ -96,6 +96,24 @@ const TicketDetails = () => {
     }
   };
 
+  const isSupport = user?.role === 'firstline' || user?.role === 'secondline';
+  const canAssign = isSupport && !ticket.assignedTo;
+  const isAdmin = user?.role === 'admin';
+  const isAssignedToMe = ticket.assignedTo?._id === user?._id;
+  const canResolve = isAssignedToMe && ticket.status !== 'resolved';
+
+  const handleResolveTicket = async () => {
+    try {
+      const res = await axiosInstance.put(`/tickets/${id}`, { status: 'resolved' });
+      setTicket(res.data.data);
+      setStatus('resolved');
+      setAlert('Ticket marked as resolved successfully', 'success');
+    } catch (err) {
+      console.error('Error resolving ticket:', err);
+      setAlert(err.response?.data?.msg || 'Failed to resolve ticket', 'danger');
+    }
+  };
+
   // Status badge color
   const getStatusColor = (status) => {
     switch (status) {
@@ -134,10 +152,6 @@ const TicketDetails = () => {
     );
   }
 
-  const isSupport = user?.role === 'firstline' || user?.role === 'secondline';
-  const canAssign = isSupport && !ticket.assignedTo;
-  const isAdmin = user?.role === 'admin';
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
@@ -171,16 +185,28 @@ const TicketDetails = () => {
                 </div>
               </div>
 
-              {canAssign && (
-                <div className="mb-6">
+              {/* Support Staff Actions */}
+              <div className="flex gap-4 mb-6">
+                {canAssign && (
                   <button
                     onClick={handleSelfAssign}
                     className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition-colors"
                   >
                     Assign to Myself
                   </button>
-                </div>
-              )}
+                )}
+                {canResolve && (
+                  <button
+                    onClick={handleResolveTicket}
+                    className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition-colors flex items-center"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Mark as Resolved
+                  </button>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
