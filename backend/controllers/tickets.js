@@ -9,23 +9,23 @@ exports.getTickets = async (req, res) => {
   try {
     let query = {};
     
-    // If user is support staff, show all tickets
-    if (['firstline', 'secondline'].includes(req.user.role)) {
+    // If user is support staff or admin, show all tickets
+    if (['firstline', 'secondline', 'admin'].includes(req.user.role)) {
       // No query filter - they can see all tickets
     }
-    // If admin, show all tickets
-    else if (req.user.role === 'admin') {
-      // No query filter - they can see all tickets
-    }
-    // If regular user, only show their tickets
+    // For regular users, only show their tickets
     else {
       query.user = req.user.id;
     }
 
     const tickets = await Ticket.find(query)
-      .populate('user', 'name email')
-      .populate('assignedTo', 'name role')
-      .sort('-createdAt');
+      .populate('user', 'name email role')
+      .populate('assignedTo', 'name email role')
+      .populate({
+        path: 'comments.user',
+        select: 'name email role'
+      })
+      .sort('-updatedAt'); // Sort by last updated first
 
     res.json({
       success: true,
@@ -132,26 +132,87 @@ exports.updateTicket = async (req, res) => {
   }
 
   try {
-    let ticket = await Ticket.findById(req.params.id);
+    let ticket = await Ticket.findById(req.params.id)
+      .populate('user', 'name email role')
+      .populate('assignedTo', 'name role');
 
     if (!ticket) {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Make sure user owns ticket or is admin/TO
-    if (
-      ticket.user.toString() !== req.user.id &&
-      req.user.role === 'user' &&
-      (!req.user.role.startsWith('TO') || ticket.assignedTo?.toString() !== req.user.id)
-    ) {
-      return res.status(401).json({ msg: 'Not authorized' });
+    // Check if user has access to update this ticket:
+    // 1. User is admin (always has access)
+    // 2. User owns the ticket
+    // 3. User is support staff
+    const hasAccess = 
+      req.user.role === 'admin' ||
+      ticket.user._id.toString() === req.user.id ||
+      ['firstline', 'secondline'].includes(req.user.role);
+
+    if (!hasAccess) {
+      return res.status(401).json({ msg: 'Not authorized to update this ticket' });
+    }
+
+    // Handle status updates for support staff
+    if (['firstline', 'secondline'].includes(req.user.role) && req.body.status) {
+      // Only assigned support staff can update status
+      if (!ticket.assignedTo || ticket.assignedTo._id.toString() !== req.user.id) {
+        return res.status(403).json({ msg: 'Only the assigned support staff can update ticket status' });
+      }
+
+      // Support staff can only set status to 'resolved' or 'in_progress'
+      if (!['resolved', 'in_progress'].includes(req.body.status)) {
+        return res.status(400).json({ msg: 'Support staff can only set status to resolved or in progress' });
+      }
+    }
+
+    // Regular users can only update certain fields
+    if (!['admin', 'firstline', 'secondline'].includes(req.user.role)) {
+      // Filter out fields that regular users shouldn't be able to update
+      const allowedUpdates = ['description'];
+      Object.keys(req.body).forEach(key => {
+        if (!allowedUpdates.includes(key)) {
+          delete req.body[key];
+        }
+      });
+    }
+
+    // If marking as resolved, add a system comment
+    if (req.body.status === 'resolved' && ticket.status !== 'resolved') {
+      const resolvedComment = {
+        text: `Ticket marked as resolved by ${req.user.role} support staff`,
+        user: req.user.id,
+        createdAt: Date.now()
+      };
+      
+      if (!ticket.comments) {
+        ticket.comments = [];
+      }
+      ticket.comments.unshift(resolvedComment);
     }
 
     ticket = await Ticket.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { 
+        $set: {
+          ...req.body,
+          updatedAt: Date.now(),
+          comments: ticket.comments // Include updated comments if any
+        }
+      },
       { new: true, runValidators: true }
-    ).populate('user', 'name email').populate('assignedTo', 'name role');
+    )
+    .populate('user', 'name email role')
+    .populate('assignedTo', 'name role')
+    .populate({
+      path: 'comments.user',
+      select: 'name email role'
+    });
+
+    // Sort comments by newest first
+    if (ticket.comments) {
+      ticket.comments.sort((a, b) => b.createdAt - a.createdAt);
+    }
 
     res.json({
       success: true,
