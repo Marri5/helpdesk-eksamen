@@ -32,6 +32,25 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
     }
   };
 
+  // Calculate if there are unread responses (comments after user's last comment)
+  const hasUnreadResponses = () => {
+    if (!ticket.comments || ticket.comments.length === 0) return false;
+    
+    // If there are no user comments, and there are support comments, show as unread
+    const userComments = ticket.comments.filter(c => c.user._id === ticket.user._id);
+    if (userComments.length === 0 && ticket.comments.length > 0) return true;
+    
+    // Get the timestamp of user's last comment
+    const lastUserComment = userComments[0]?.createdAt;
+    if (!lastUserComment) return false;
+    
+    // Check if there are any support comments after user's last comment
+    return ticket.comments.some(c => 
+      c.user._id !== ticket.user._id && 
+      new Date(c.createdAt) > new Date(lastUserComment)
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <div className="border-b border-gray-200 bg-gray-50 p-4">
@@ -41,6 +60,11 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
               <Link to={`/tickets/${ticket._id}`} className="text-primary hover:text-blue-700">
                 {ticket.title}
               </Link>
+              {hasUnreadResponses() && (
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                  New Response
+                </span>
+              )}
             </h3>
           </div>
           <div className="flex space-x-2">
@@ -94,9 +118,15 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
       <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
         <Link 
           to={`/tickets/${ticket._id}`} 
-          className="bg-primary text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+          className="flex items-center bg-primary text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
-          View Details
+          <span>View & Respond</span>
+          {hasUnreadResponses() && (
+            <span className="ml-2 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+          )}
         </Link>
         {showEscalate && ticket.status !== 'escalated' && ticket.supportLevel !== 'secondline' && (
           <button

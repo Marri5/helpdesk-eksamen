@@ -9,12 +9,16 @@ exports.getTickets = async (req, res) => {
   try {
     let query = {};
     
-    // If user is TO, only show their assigned tickets
-    if (req.user.role.startsWith('TO')) {
-      query.assignedTo = req.user.id;
+    // If user is support staff, show all tickets
+    if (['firstline', 'secondline'].includes(req.user.role)) {
+      // No query filter - they can see all tickets
+    }
+    // If admin, show all tickets
+    else if (req.user.role === 'admin') {
+      // No query filter - they can see all tickets
     }
     // If regular user, only show their tickets
-    else if (req.user.role === 'user') {
+    else {
       query.user = req.user.id;
     }
 
