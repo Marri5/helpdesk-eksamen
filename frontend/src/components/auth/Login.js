@@ -7,6 +7,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, error, setError, user } = useContext(AuthContext);
   const { setAlert } = useContext(AlertContext);
+  const [cooldownTime, setCooldownTime] = useState(0);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -17,6 +18,32 @@ const Login = () => {
 
   useEffect(() => {
     setError(null);
+    
+    // Check for existing cooldown
+    const checkCooldown = () => {
+      const storedCooldown = localStorage.getItem('loginCooldown');
+      if (storedCooldown) {
+        const remainingTime = Math.max(0, parseInt(storedCooldown) - Date.now());
+        if (remainingTime > 0) {
+          setCooldownTime(remainingTime);
+          const interval = setInterval(() => {
+            setCooldownTime(time => {
+              const newTime = Math.max(0, time - 1000);
+              if (newTime === 0) {
+                localStorage.removeItem('loginCooldown');
+                clearInterval(interval);
+              }
+              return newTime;
+            });
+          }, 1000);
+          return () => clearInterval(interval);
+        } else {
+          localStorage.removeItem('loginCooldown');
+        }
+      }
+    };
+    
+    checkCooldown();
   }, [setError]);
 
   useEffect(() => {
@@ -39,6 +66,11 @@ const Login = () => {
   const onSubmit = async e => {
     e.preventDefault();
     
+    if (cooldownTime > 0) {
+      setAlert(`Please wait ${Math.ceil(cooldownTime / 1000)} seconds before trying again`, 'danger');
+      return;
+    }
+
     if (!email || !password) {
       setAlert('Please fill in all fields', 'danger');
       return;
@@ -77,6 +109,7 @@ const Login = () => {
                   placeholder="Enter Email"
                   value={email}
                   onChange={onChange}
+                  disabled={cooldownTime > 0}
                   required
                 />
               </div>
@@ -92,14 +125,21 @@ const Login = () => {
                   placeholder="Enter Password"
                   value={password}
                   onChange={onChange}
+                  disabled={cooldownTime > 0}
                   required
                 />
               </div>
+              {cooldownTime > 0 && (
+                <div className="mb-4 text-center text-red-600">
+                  Please wait {Math.ceil(cooldownTime / 1000)} seconds before trying again
+                </div>
+              )}
               <button
                 type="submit"
-                className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                className={`w-full ${cooldownTime > 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary hover:bg-blue-600'} text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary`}
+                disabled={cooldownTime > 0}
               >
-                Login
+                {cooldownTime > 0 ? `Wait ${Math.ceil(cooldownTime / 1000)}s` : 'Login'}
               </button>
             </form>
             <p className="mt-4 text-center">

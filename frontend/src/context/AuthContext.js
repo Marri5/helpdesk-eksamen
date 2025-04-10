@@ -81,7 +81,16 @@ export const AuthProvider = ({ children }) => {
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
-      setError(err.response?.data?.msg || 'Login failed. Please check your credentials.');
+      
+      // Handle rate limiting error specifically
+      if (err.response?.status === 429) {
+        const retryAfter = err.response.headers['retry-after'] || 60; // Default to 60 seconds if header not present
+        setError(`Too many login attempts. Please try again in ${retryAfter} seconds.`);
+        // Store the timestamp when we can retry
+        localStorage.setItem('loginCooldown', (Date.now() + (retryAfter * 1000)).toString());
+      } else {
+        setError(err.response?.data?.msg || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
