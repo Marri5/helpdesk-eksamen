@@ -80,12 +80,14 @@ const TicketDetails = () => {
   // Status badge color
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Open':
-        return 'bg-danger';
-      case 'Under arbeid':
-        return 'bg-warning';
-      case 'Løst':
-        return 'bg-success';
+      case 'new':
+        return 'bg-blue-500';
+      case 'in_progress':
+        return 'bg-yellow-500';
+      case 'escalated':
+        return 'bg-red-500';
+      case 'resolved':
+        return 'bg-green-500';
       default:
         return 'bg-gray-500';
     }
@@ -94,12 +96,12 @@ const TicketDetails = () => {
   // Priority badge color
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'High':
-        return 'bg-danger';
-      case 'Medium':
-        return 'bg-warning';
-      case 'Low':
-        return 'bg-info';
+      case 'high':
+        return 'bg-red-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      case 'low':
+        return 'bg-blue-500';
       default:
         return 'bg-gray-500';
     }
@@ -189,9 +191,10 @@ const TicketDetails = () => {
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
                       >
-                        <option value="Open">Open</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Resolved">Resolved</option>
+                        <option value="new">New</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="escalated">Escalated</option>
+                        <option value="resolved">Resolved</option>
                       </select>
                     </div>
                     <button 
@@ -211,9 +214,9 @@ const TicketDetails = () => {
                         value={priority}
                         onChange={(e) => setPriority(e.target.value)}
                       >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
                       </select>
                     </div>
                     <button 

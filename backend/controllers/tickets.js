@@ -222,23 +222,20 @@ exports.addComment = async (req, res) => {
 exports.getTicketStats = async (req, res) => {
   try {
     const total = await Ticket.countDocuments();
-    const open = await Ticket.countDocuments({ status: 'Open' });
-    const inProgress = await Ticket.countDocuments({ status: 'In Progress' });
-    const resolved = await Ticket.countDocuments({ status: 'Resolved' });
+    const open = await Ticket.countDocuments({ status: 'new' });
+    const inProgress = await Ticket.countDocuments({ status: 'in_progress' });
+    const resolved = await Ticket.countDocuments({ status: 'resolved' });
+    const escalated = await Ticket.countDocuments({ status: 'escalated' });
 
-    // TO specific stats
-    const TOStats = {
-      total: await Ticket.countDocuments({ assignedTo: { $exists: true } }),
-      firstYear: await Ticket.countDocuments({ TOYear: '1' }),
-      secondYear: await Ticket.countDocuments({ TOYear: '2' }),
-      resolved: await Ticket.countDocuments({
-        assignedTo: { $exists: true },
-        status: 'Resolved'
+    // Support staff stats
+    const supportStats = {
+      total: await User.countDocuments({ 
+        role: { $in: ['firstline', 'secondline'] }
       }),
-      pending: await Ticket.countDocuments({
-        assignedTo: { $exists: true },
-        status: { $ne: 'Resolved' }
-      })
+      firstline: await User.countDocuments({ role: 'firstline' }),
+      secondline: await User.countDocuments({ role: 'secondline' }),
+      resolved: await Ticket.countDocuments({ status: 'resolved' }),
+      escalated: await Ticket.countDocuments({ status: 'escalated' })
     };
 
     // Get category distribution
@@ -260,7 +257,8 @@ exports.getTicketStats = async (req, res) => {
         open,
         inProgress,
         resolved,
-        TO: TOStats,
+        escalated,
+        support: supportStats,
         categories,
         priorities
       }

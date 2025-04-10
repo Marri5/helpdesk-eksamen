@@ -42,25 +42,42 @@ const SupportDashboard = () => {
         return false;
       }
 
-      // First-line support sees only unassigned and their assigned tickets
+      // First-line support sees:
+      // 1. New unassigned tickets
+      // 2. Their assigned first-line tickets
+      // 3. Any first-line tickets that aren't escalated
       if (user.role === 'firstline') {
+        // Don't show escalated or second-line tickets
+        if (ticket.status === 'escalated' || ticket.supportLevel === 'secondline') {
+          return false;
+        }
+
         return (
-          !ticket.assignedTo || 
-          ticket.assignedTo._id === user._id ||
+          // Show new unassigned tickets
+          (!ticket.assignedTo && ticket.status === 'new') ||
+          // Show tickets assigned to this first-line support
+          ticket.assignedTo?._id === user._id ||
+          // Show first-line tickets
           ticket.supportLevel === 'firstline'
         );
       }
       
-      // Second-line support sees escalated tickets and their assigned tickets
+      // Second-line support sees:
+      // 1. Escalated tickets
+      // 2. Their assigned second-line tickets
+      // 3. Any second-line tickets
       if (user.role === 'secondline') {
         return (
+          // Show escalated tickets
           ticket.status === 'escalated' ||
+          // Show tickets assigned to this second-line support
           ticket.assignedTo?._id === user._id ||
+          // Show second-line tickets
           ticket.supportLevel === 'secondline'
         );
       }
 
-      return true;
+      return false; // Shouldn't reach here, but just in case
     });
   };
 

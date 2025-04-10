@@ -38,10 +38,18 @@ const Login = () => {
 
   const onSubmit = async e => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      setAlert('Please fill in all fields', 'danger');
+      return;
+    }
+
     try {
       await login({ email, password });
+      // Successful login will trigger the useEffect to handle navigation
     } catch (err) {
-      const message = err.response?.data?.msg || 'Login failed';
+      console.error('Login error:', err);
+      const message = err.response?.data?.msg || 'Login failed. Please check your credentials.';
       setAlert(message, 'danger');
     }
   };

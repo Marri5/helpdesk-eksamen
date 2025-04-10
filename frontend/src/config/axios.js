@@ -7,7 +7,8 @@ const axiosInstance = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
-    withCredentials: true
+    withCredentials: true,
+    credentials: 'include'
 });
 
 // Request interceptor to add auth token to requests
@@ -32,7 +33,8 @@ axiosInstance.interceptors.response.use(
             // Clear invalid token
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            // Redirect to login if not already there
+            
+            // Only redirect to login if not already there
             if (!window.location.pathname.includes('/login')) {
                 window.location.href = '/login';
             }
