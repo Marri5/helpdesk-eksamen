@@ -57,7 +57,7 @@ router.put(
   authorize('admin'),
   [
     check('assignedTo', 'Assigned user ID is required').not().isEmpty(),
-    check('TOYear', 'TO year is required').isIn(['1', '2'])
+    check('supportLevel', 'Support level must be either firstline or secondline').isIn(['firstline', 'secondline'])
   ],
   assignTicket
 );

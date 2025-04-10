@@ -271,7 +271,7 @@ exports.getTicketStats = async (req, res) => {
   }
 };
 
-// @desc    Assign ticket to TO
+// @desc    Assign ticket to support staff
 // @route   PUT /api/tickets/:id/assign
 // @access  Private/Admin
 exports.assignTicket = async (req, res) => {
@@ -281,36 +281,39 @@ exports.assignTicket = async (req, res) => {
   }
 
   try {
-    const { assignedTo, TOYear } = req.body;
+    const { assignedTo, supportLevel } = req.body;
 
-    // Verify TO exists and has correct role
-    const to = await User.findById(assignedTo);
-    if (!to || !to.role.startsWith('TO')) {
-      return res.status(400).json({ msg: 'Invalid TO user' });
+    // Verify the assigned user exists and has the correct role
+    const assignedUser = await User.findById(assignedTo);
+    if (!assignedUser) {
+      return res.status(404).json({ msg: 'Assigned user not found' });
     }
 
-    // Verify TO year matches role
-    if (to.role !== `TO${TOYear}`) {
-      return res.status(400).json({ msg: 'TO year does not match role' });
+    if (assignedUser.role !== supportLevel) {
+      return res.status(400).json({ 
+        msg: `User must be a ${supportLevel} support staff to be assigned this ticket` 
+      });
     }
 
     let ticket = await Ticket.findById(req.params.id);
-
     if (!ticket) {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
+    // Update ticket with assignment and support level
     ticket = await Ticket.findByIdAndUpdate(
       req.params.id,
-      {
-        $set: {
+      { 
+        $set: { 
           assignedTo,
-          TOYear,
-          status: 'In Progress'
+          supportLevel,
+          status: 'in_progress',
+          updatedAt: Date.now()
         }
       },
       { new: true, runValidators: true }
-    ).populate('user', 'name email').populate('assignedTo', 'name role');
+    ).populate('user', 'name email')
+     .populate('assignedTo', 'name role');
 
     res.json({
       success: true,
@@ -319,7 +322,7 @@ exports.assignTicket = async (req, res) => {
   } catch (err) {
     console.error(err.message);
     if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: 'Ticket not found' });
+      return res.status(404).json({ msg: 'Invalid ticket or user ID' });
     }
     res.status(500).json({ msg: 'Server error' });
   }

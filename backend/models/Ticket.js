@@ -19,8 +19,7 @@ const TicketSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    required: [true, 'Please select a category'],
-    enum: ['Hardware', 'Software', 'Network', 'Account', 'Other']
+    required: [true, 'Please add a category']
   },
   status: {
     type: String,
@@ -35,11 +34,12 @@ const TicketSchema = new mongoose.Schema({
   supportLevel: {
     type: String,
     enum: ['firstline', 'secondline'],
-    default: 'firstline'
+    required: false
   },
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: false
   },
   TOYear: {
     type: String,
