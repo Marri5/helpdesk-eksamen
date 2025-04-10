@@ -38,11 +38,12 @@ const TicketForm = () => {
         status: 'new'
       };
       
-      await axiosInstance.post('/tickets', ticketData);
+      const response = await axiosInstance.post('/tickets', ticketData);
+      console.log('Ticket created:', response.data);
       setAlert('Ticket created successfully', 'success');
       navigate('/dashboard');
     } catch (err) {
-      console.error('Error creating ticket:', err);
+      console.error('Error creating ticket:', err.response?.data || err.message);
       const errorMsg = err.response?.data?.msg || 'Error creating ticket';
       setAlert(errorMsg, 'danger');
     }

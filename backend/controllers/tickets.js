@@ -84,20 +84,27 @@ exports.createTicket = async (req, res) => {
       title: req.body.title,
       description: req.body.description,
       category: req.body.category,
-      priority: req.body.priority || 'Medium',
-      status: 'Open',
-      user: req.user.id
+      priority: req.body.priority || 'medium',
+      status: 'new',
+      user: req.user.id,
+      createdBy: req.user.id
     });
 
     const ticket = await newTicket.save();
+
+    // Populate user and createdBy fields for the response
+    await ticket.populate([
+      { path: 'user', select: 'name email' },
+      { path: 'createdBy', select: 'name email' }
+    ]);
 
     res.status(201).json({
       success: true,
       data: ticket
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Ticket creation error:', err);
+    res.status(500).json({ msg: err.message || 'Server error' });
   }
 };
 
