@@ -10,18 +10,29 @@ const TicketForm = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: ''
+    category: '',
+    isTO: false,
+    TOYear: '',
+    studentName: '',
+    studentClass: ''
   });
 
-  const { title, description, category } = formData;
+  const { title, description, category, isTO, TOYear, studentName, studentClass } = formData;
 
-  const onChange = e =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const onChange = e => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setFormData({ ...formData, [e.target.name]: value });
+  };
 
   const onSubmit = async e => {
     e.preventDefault();
     if (!title || !description || !category) {
       setAlert('Please fill in all fields', 'danger');
+      return;
+    }
+
+    if (isTO && (!TOYear || !studentName || !studentClass)) {
+      setAlert('Please fill in all TO-related fields', 'danger');
       return;
     }
 
@@ -61,6 +72,72 @@ const TicketForm = () => {
                   required
                 />
               </div>
+              
+              <div className="mb-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="isTO"
+                    checked={isTO}
+                    onChange={onChange}
+                    className="form-checkbox h-4 w-4 text-primary"
+                  />
+                  <span className="text-gray-700 text-sm font-bold">Tilrettelagt Opplæring (TO)</span>
+                </label>
+              </div>
+
+              {isTO && (
+                <>
+                  <div className="mb-4">
+                    <label htmlFor="TOYear" className="block text-gray-700 text-sm font-bold mb-2">
+                      TO Year
+                    </label>
+                    <select
+                      id="TOYear"
+                      name="TOYear"
+                      value={TOYear}
+                      onChange={onChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                      required
+                    >
+                      <option value="">Select year</option>
+                      <option value="1">1st Year</option>
+                      <option value="2">2nd Year</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-4">
+                    <label htmlFor="studentName" className="block text-gray-700 text-sm font-bold mb-2">
+                      Student Name
+                    </label>
+                    <input
+                      type="text"
+                      id="studentName"
+                      name="studentName"
+                      value={studentName}
+                      onChange={onChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                      required={isTO}
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label htmlFor="studentClass" className="block text-gray-700 text-sm font-bold mb-2">
+                      Student Class
+                    </label>
+                    <input
+                      type="text"
+                      id="studentClass"
+                      name="studentClass"
+                      value={studentClass}
+                      onChange={onChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                      required={isTO}
+                    />
+                  </div>
+                </>
+              )}
+
               <div className="mb-4">
                 <label htmlFor="category" className="block text-gray-700 text-sm font-bold mb-2">
                   Category
@@ -81,6 +158,7 @@ const TicketForm = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
+
               <div className="mb-6">
                 <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">
                   Description
@@ -96,6 +174,7 @@ const TicketForm = () => {
                   required
                 ></textarea>
               </div>
+
               <div className="flex space-x-3">
                 <button
                   type="submit"
