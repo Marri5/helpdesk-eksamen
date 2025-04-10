@@ -62,6 +62,11 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
 
+    // Validate role if it's being updated
+    if (role && !['user', 'admin', 'firstline', 'secondline'].includes(role)) {
+      return res.status(400).json({ msg: 'Invalid role value' });
+    }
+
     const userFields = {};
     if (name) userFields.name = name;
     if (email) userFields.email = email;
@@ -81,6 +86,9 @@ router.put('/:id', async (req, res) => {
     console.error(err.message);
     if (err.kind === 'ObjectId') {
       return res.status(404).json({ msg: 'User not found' });
+    }
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ msg: err.message });
     }
     res.status(500).json({ msg: 'Server error' });
   }

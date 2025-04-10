@@ -95,7 +95,7 @@ const AdminDashboard = () => {
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      const res = await axiosInstance.put(`/users/${userId}`, { role: newRole });
+      const res = await axiosInstance.put(`/api/users/${userId}`, { role: newRole });
       if (res.data.success) {
         setUsers(users.map(u => 
           u._id === userId ? { ...u, role: newRole } : u
@@ -108,8 +108,10 @@ const AdminDashboard = () => {
         navigate('/login');
       } else if (err.response?.status === 404) {
         setAlert('User not found', 'danger');
+      } else if (err.response?.status === 400) {
+        setAlert(err.response.data.msg || 'Invalid role value', 'danger');
       } else {
-        setAlert(err.response?.data?.msg || 'Failed to update user role', 'danger');
+        setAlert('Failed to update user role. Please try again.', 'danger');
       }
     }
   };
@@ -259,8 +261,8 @@ const AdminDashboard = () => {
                     >
                       <option value="user">User</option>
                       <option value="admin">Admin</option>
-                      <option value="TO1">TO 1st Line</option>
-                      <option value="TO2">TO 2nd Line</option>
+                      <option value="firstline">First-line Support</option>
+                      <option value="secondline">Second-line Support</option>
                     </select>
                   </td>
                 </tr>
