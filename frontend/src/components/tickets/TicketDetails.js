@@ -77,6 +77,20 @@ const TicketDetails = () => {
     }
   };
 
+  const handleSelfAssign = async () => {
+    try {
+      const res = await axiosInstance.put(`/tickets/${id}/assign`, {
+        assignedTo: user._id,
+        supportLevel: user.role
+      });
+      setTicket(res.data.data);
+      setAlert('Ticket assigned to you successfully', 'success');
+    } catch (err) {
+      console.error('Error self-assigning ticket:', err);
+      setAlert(err.response?.data?.msg || 'Failed to assign ticket', 'danger');
+    }
+  };
+
   // Status badge color
   const getStatusColor = (status) => {
     switch (status) {
@@ -160,6 +174,16 @@ const TicketDetails = () => {
                       <span className="font-semibold">Student Class:</span> {ticket.studentClass}
                     </div>
                   </div>
+                </div>
+              )}
+              {user && (user.role === 'firstline' || user.role === 'secondline') && !ticket.assignedTo && (
+                <div className="mb-6">
+                  <button
+                    onClick={handleSelfAssign}
+                    className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition-colors"
+                  >
+                    Assign to Myself
+                  </button>
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
