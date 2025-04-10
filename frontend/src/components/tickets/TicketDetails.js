@@ -2,13 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../../config/axios';
 import Moment from 'react-moment';
-import { AuthContext } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { AlertContext } from '../../context/AlertContext';
 
 const TicketDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const { setAlert } = useContext(AlertContext);
 
   const [ticket, setTicket] = useState(null);
@@ -16,6 +16,7 @@ const TicketDetails = () => {
   const [commentText, setCommentText] = useState('');
   const [status, setStatus] = useState('');
   const [priority, setPriority] = useState('');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const getTicket = async () => {
@@ -28,6 +29,7 @@ const TicketDetails = () => {
       } catch (err) {
         console.error('Error fetching ticket:', err);
         setAlert(err.response?.data?.msg || 'Failed to fetch ticket details', 'danger');
+        setError('Failed to load ticket details');
         navigate('/dashboard');
       }
     };
@@ -127,6 +129,14 @@ const TicketDetails = () => {
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
       </div>
     );
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!ticket) {
+    return <div>Ticket not found</div>;
   }
 
   return (

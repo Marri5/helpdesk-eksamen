@@ -1,12 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../config/axios';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext, useAuth } from '../../context/AuthContext';
 import { AlertContext } from '../../context/AlertContext';
 import TicketItem from '../tickets/TicketItem';
 
 const UserDashboard = () => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const { setAlert } = useContext(AlertContext);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +26,10 @@ const UserDashboard = () => {
 
     getTickets();
   }, [setAlert]);
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

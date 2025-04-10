@@ -1,9 +1,9 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const PrivateRoute = ({ children }) => {
-  const { isAuthenticated, loading, user } = useContext(AuthContext);
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -13,7 +13,7 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!user) {
     return <Navigate to="/login" />;
   }
 
