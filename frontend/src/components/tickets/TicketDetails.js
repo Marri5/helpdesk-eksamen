@@ -188,6 +188,64 @@ const TicketDetails = () => {
               <p className="text-gray-700">{ticket.description}</p>
             </div>
 
+            {/* Comments and Updates Section */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-4">Updates & Comments</h3>
+              
+              {/* Comment Form */}
+              <form onSubmit={onCommentSubmit} className="mb-6">
+                <div className="mb-3">
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    rows="3"
+                    placeholder="Add a comment..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                  ></textarea>
+                </div>
+                <button 
+                  type="submit" 
+                  className="bg-primary text-white py-2 px-4 rounded hover:bg-blue-600"
+                >
+                  Post Comment
+                </button>
+              </form>
+
+              {/* Timeline of Updates and Comments */}
+              <div className="space-y-4">
+                {ticket.comments && ticket.comments.length > 0 ? (
+                  ticket.comments.map((comment, index) => (
+                    <div key={index} className={`p-4 rounded-lg ${
+                      comment.user._id === user._id ? 'bg-blue-50 border-l-4 border-blue-500' : 'bg-gray-50 border-l-4 border-gray-500'
+                    }`}>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center">
+                          <span className="font-semibold mr-2">{comment.user.name}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded ${
+                            comment.user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                            comment.user.role.includes('line') ? 'bg-green-100 text-green-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {comment.user.role === 'firstline' ? 'First-line Support' :
+                             comment.user.role === 'secondline' ? 'Second-line Support' :
+                             comment.user.role.charAt(0).toUpperCase() + comment.user.role.slice(1)}
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          <Moment fromNow>{comment.createdAt}</Moment>
+                        </span>
+                      </div>
+                      <p className="text-gray-700">{comment.text}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded">
+                    <p>No updates yet. Be the first to comment!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {user && user.role === 'admin' && (
               <div className="bg-gray-50 p-4 rounded-lg mb-6">
                 <h3 className="text-lg font-semibold mb-4">Admin Controls</h3>
@@ -241,57 +299,14 @@ const TicketDetails = () => {
               </div>
             )}
 
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Comments ({ticket.comments.length})</h3>
-              <form onSubmit={onCommentSubmit} className="mb-6">
-                <div className="mb-3">
-                  <textarea
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                    rows="3"
-                    placeholder="Add a comment..."
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                  ></textarea>
-                </div>
-                <button 
-                  type="submit" 
-                  className="bg-primary text-white py-2 px-4 rounded hover:bg-blue-600"
-                >
-                  Post Comment
-                </button>
-              </form>
-
-              <div className="space-y-4">
-                {ticket.comments.length > 0 ? (
-                  ticket.comments.map((comment, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4 border-l-4 border-primary">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center">
-                          <span className="font-semibold mr-2">{comment.name}</span>
-                          <span className="bg-info text-white text-xs px-2 py-0.5 rounded">{comment.role}</span>
-                        </div>
-                        <span className="text-sm text-gray-500">
-                          <Moment format="YYYY-MM-DD HH:mm">{comment.createdAt}</Moment>
-                        </span>
-                      </div>
-                      <p className="text-gray-700">{comment.text}</p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded">
-                    <p>No comments yet. Be the first to comment!</p>
-                  </div>
-                )}
-              </div>
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+              <Link
+                to={user && user.role === 'admin' ? '/admin' : '/dashboard'}
+                className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+              >
+                Back to Dashboard
+              </Link>
             </div>
-          </div>
-          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-            <Link
-              to={user && user.role === 'admin' ? '/admin' : '/dashboard'}
-              className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
-            >
-              Back to Dashboard
-            </Link>
           </div>
         </div>
       </div>

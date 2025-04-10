@@ -73,9 +73,20 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
             </div>
           )}
           {ticket.comments && ticket.comments.length > 0 && (
-            <div className="text-sm text-gray-500">
-              <i className="fas fa-comment-alt mr-1"></i>
-              {ticket.comments.length} comment{ticket.comments.length !== 1 ? 's' : ''}
+            <div className="mt-2 p-3 bg-gray-50 rounded-md">
+              <div className="flex justify-between items-center text-sm text-gray-600 mb-1">
+                <div className="flex items-center">
+                  <i className="fas fa-comment-alt mr-1"></i>
+                  <span>Latest update from {ticket.comments[0].user.name}</span>
+                </div>
+                <Moment fromNow>{ticket.comments[0].createdAt}</Moment>
+              </div>
+              <p className="text-sm text-gray-700 line-clamp-2">{ticket.comments[0].text}</p>
+              {ticket.comments.length > 1 && (
+                <div className="text-xs text-gray-500 mt-1">
+                  +{ticket.comments.length - 1} more {ticket.comments.length - 1 === 1 ? 'comment' : 'comments'}
+                </div>
+              )}
             </div>
           )}
         </div>
