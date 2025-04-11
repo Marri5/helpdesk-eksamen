@@ -17,12 +17,10 @@ const PrivateRoute = ({ children }) => {
     return <Navigate to="/login" />;
   }
 
-  // If children is a function, call it with the user object
   if (typeof children === 'function') {
     return children({ user });
   }
 
-  // Otherwise, just render the children
   return children;
 };
 

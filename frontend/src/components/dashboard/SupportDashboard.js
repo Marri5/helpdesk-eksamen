@@ -32,52 +32,34 @@ const SupportDashboard = () => {
 
   const filterTickets = (tickets) => {
     return tickets.filter(ticket => {
-      // Filter by status if selected
       if (filterOptions.status && ticket.status !== filterOptions.status) {
         return false;
       }
-      
-      // Filter by priority if selected
       if (filterOptions.priority && ticket.priority !== filterOptions.priority) {
         return false;
       }
 
-      // First-line support sees:
-      // 1. New unassigned tickets
-      // 2. Their assigned first-line tickets
-      // 3. Any first-line tickets that aren't escalated
       if (user.role === 'firstline') {
-        // Don't show escalated or second-line tickets
         if (ticket.status === 'escalated' || ticket.supportLevel === 'secondline') {
           return false;
         }
 
         return (
-          // Show new unassigned tickets
           (!ticket.assignedTo && ticket.status === 'new') ||
-          // Show tickets assigned to this first-line support
           ticket.assignedTo?._id === user._id ||
-          // Show first-line tickets
           ticket.supportLevel === 'firstline'
         );
       }
       
-      // Second-line support sees:
-      // 1. Escalated tickets
-      // 2. Their assigned second-line tickets
-      // 3. Any second-line tickets
       if (user.role === 'secondline') {
         return (
-          // Show escalated tickets
           ticket.status === 'escalated' ||
-          // Show tickets assigned to this second-line support
           ticket.assignedTo?._id === user._id ||
-          // Show second-line tickets
           ticket.supportLevel === 'secondline'
         );
       }
 
-      return false; // Shouldn't reach here, but just in case
+      return false;
     });
   };
 

@@ -7,9 +7,6 @@ const router = express.Router();
 router.use(protect);
 router.use(authorize('admin'));
 
-// @route   GET /api/users
-// @desc    Get all users
-// @access  Private/Admin
 router.get('/', async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -25,9 +22,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @route   GET /api/users/:id
-// @desc    Get user by ID
-// @access  Private/Admin
 router.get('/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
@@ -49,9 +43,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// @route   PUT /api/users/:id
-// @desc    Update user
-// @access  Private/Admin
 router.put('/:id', async (req, res) => {
   try {
     const { name, email, role } = req.body;
@@ -62,7 +53,6 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    // Validate role if it's being updated
     if (role && !['user', 'admin', 'firstline', 'secondline'].includes(role)) {
       return res.status(400).json({ msg: 'Invalid role value' });
     }
@@ -94,9 +84,6 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// @route   DELETE /api/users/:id
-// @desc    Delete user
-// @access  Private/Admin
 router.delete('/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);

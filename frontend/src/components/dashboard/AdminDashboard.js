@@ -36,7 +36,6 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    // Check if user is authenticated and is admin
     if (!isAuthenticated) {
       navigate('/login');
       return;

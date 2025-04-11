@@ -2,18 +2,13 @@ const Ticket = require('../models/Ticket');
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
 
-// @desc    Get all tickets
-// @route   GET /api/tickets
-// @access  Private
+
 exports.getTickets = async (req, res) => {
   try {
     let query = {};
     
-    // If user is support staff or admin, show all tickets
     if (['firstline', 'secondline', 'admin'].includes(req.user.role)) {
-      // No query filter - they can see all tickets
     }
-    // For regular users, only show their tickets
     else {
       query.user = req.user.id;
     }
@@ -25,7 +20,7 @@ exports.getTickets = async (req, res) => {
         path: 'comments.user',
         select: 'name email role'
       })
-      .sort('-updatedAt'); // Sort by last updated first
+      .sort('-updatedAt');
 
     res.json({
       success: true,
@@ -38,9 +33,7 @@ exports.getTickets = async (req, res) => {
   }
 };
 
-// @desc    Get single ticket
-// @route   GET /api/tickets/:id
-// @access  Private
+
 exports.getTicket = async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id)
@@ -55,10 +48,6 @@ exports.getTicket = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Check if user has access to this ticket:
-    // 1. User is admin (always has access)
-    // 2. User owns the ticket
-    // 3. User is support staff
     const hasAccess = 
       req.user.role === 'admin' ||
       ticket.user._id.toString() === req.user.id ||
@@ -68,7 +57,6 @@ exports.getTicket = async (req, res) => {
       return res.status(401).json({ msg: 'Not authorized to view this ticket' });
     }
 
-    // Sort comments by newest first
     ticket.comments.sort((a, b) => b.createdAt - a.createdAt);
 
     res.json({
@@ -84,9 +72,6 @@ exports.getTicket = async (req, res) => {
   }
 };
 
-// @desc    Create new ticket
-// @route   POST /api/tickets
-// @access  Private
 exports.createTicket = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -106,7 +91,6 @@ exports.createTicket = async (req, res) => {
 
     const ticket = await newTicket.save();
 
-    // Populate user and createdBy fields for the response
     await ticket.populate([
       { path: 'user', select: 'name email' },
       { path: 'createdBy', select: 'name email' }
@@ -122,9 +106,6 @@ exports.createTicket = async (req, res) => {
   }
 };
 
-// @desc    Update ticket
-// @route   PUT /api/tickets/:id
-// @access  Private
 exports.updateTicket = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -140,10 +121,6 @@ exports.updateTicket = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Check if user has access to update this ticket:
-    // 1. User is admin (always has access)
-    // 2. User owns the ticket
-    // 3. User is support staff
     const hasAccess = 
       req.user.role === 'admin' ||
       ticket.user._id.toString() === req.user.id ||
@@ -153,22 +130,17 @@ exports.updateTicket = async (req, res) => {
       return res.status(401).json({ msg: 'Not authorized to update this ticket' });
     }
 
-    // Handle status updates for support staff
     if (['firstline', 'secondline'].includes(req.user.role) && req.body.status) {
-      // Only assigned support staff can update status
       if (!ticket.assignedTo || ticket.assignedTo._id.toString() !== req.user.id) {
         return res.status(403).json({ msg: 'Only the assigned support staff can update ticket status' });
       }
 
-      // Support staff can only set status to 'resolved' or 'in_progress'
       if (!['resolved', 'in_progress'].includes(req.body.status)) {
         return res.status(400).json({ msg: 'Support staff can only set status to resolved or in progress' });
       }
     }
 
-    // Regular users can only update certain fields
     if (!['admin', 'firstline', 'secondline'].includes(req.user.role)) {
-      // Filter out fields that regular users shouldn't be able to update
       const allowedUpdates = ['description'];
       Object.keys(req.body).forEach(key => {
         if (!allowedUpdates.includes(key)) {
@@ -177,7 +149,6 @@ exports.updateTicket = async (req, res) => {
       });
     }
 
-    // If marking as resolved, add a system comment
     if (req.body.status === 'resolved' && ticket.status !== 'resolved') {
       const resolvedComment = {
         text: `Ticket marked as resolved by ${req.user.role} support staff`,
@@ -197,7 +168,7 @@ exports.updateTicket = async (req, res) => {
         $set: {
           ...req.body,
           updatedAt: Date.now(),
-          comments: ticket.comments // Include updated comments if any
+          comments: ticket.comments
         }
       },
       { new: true, runValidators: true }
@@ -209,7 +180,6 @@ exports.updateTicket = async (req, res) => {
       select: 'name email role'
     });
 
-    // Sort comments by newest first
     if (ticket.comments) {
       ticket.comments.sort((a, b) => b.createdAt - a.createdAt);
     }
@@ -227,9 +197,6 @@ exports.updateTicket = async (req, res) => {
   }
 };
 
-// @desc    Delete ticket
-// @route   DELETE /api/tickets/:id
-// @access  Private
 exports.deleteTicket = async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
@@ -238,7 +205,6 @@ exports.deleteTicket = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Make sure user owns ticket or is admin
     if (ticket.user.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ msg: 'Not authorized' });
     }
@@ -258,9 +224,6 @@ exports.deleteTicket = async (req, res) => {
   }
 };
 
-// @desc    Add comment to ticket
-// @route   POST /api/tickets/:id/comments
-// @access  Private
 exports.addComment = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -280,10 +243,6 @@ exports.addComment = async (req, res) => {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // Check if user can comment on this ticket:
-    // 1. User is admin
-    // 2. User owns the ticket
-    // 3. User is support staff
     const canComment = 
       req.user.role === 'admin' ||
       ticket.user._id.toString() === req.user.id ||
@@ -299,12 +258,10 @@ exports.addComment = async (req, res) => {
       createdAt: Date.now()
     };
 
-    // Add the comment and update the ticket's updatedAt timestamp
     ticket.comments.unshift(newComment);
     ticket.updatedAt = Date.now();
     await ticket.save();
 
-    // Return populated ticket with sorted comments
     const populatedTicket = await Ticket.findById(req.params.id)
       .populate('user', 'name email role')
       .populate('assignedTo', 'name email role')
@@ -313,7 +270,6 @@ exports.addComment = async (req, res) => {
         select: 'name email role'
       });
 
-    // Sort comments by newest first
     populatedTicket.comments.sort((a, b) => b.createdAt - a.createdAt);
 
     res.json({
@@ -326,9 +282,6 @@ exports.addComment = async (req, res) => {
   }
 };
 
-// @desc    Get ticket statistics
-// @route   GET /api/tickets/stats
-// @access  Private/Admin
 exports.getTicketStats = async (req, res) => {
   try {
     const total = await Ticket.countDocuments();
@@ -337,7 +290,6 @@ exports.getTicketStats = async (req, res) => {
     const resolved = await Ticket.countDocuments({ status: 'resolved' });
     const escalated = await Ticket.countDocuments({ status: 'escalated' });
 
-    // Support staff stats
     const supportStats = {
       total: await User.countDocuments({ 
         role: { $in: ['firstline', 'secondline'] }
@@ -348,13 +300,11 @@ exports.getTicketStats = async (req, res) => {
       escalated: await Ticket.countDocuments({ status: 'escalated' })
     };
 
-    // Get category distribution
     const categories = await Ticket.aggregate([
       { $group: { _id: '$category', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
 
-    // Get priority distribution
     const priorities = await Ticket.aggregate([
       { $group: { _id: '$priority', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
@@ -379,9 +329,6 @@ exports.getTicketStats = async (req, res) => {
   }
 };
 
-// @desc    Assign ticket to support staff
-// @route   PUT /api/tickets/:id/assign
-// @access  Private/Support
 exports.assignTicket = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -391,30 +338,24 @@ exports.assignTicket = async (req, res) => {
   try {
     const { assignedTo, supportLevel } = req.body;
 
-    // Get the ticket first
     let ticket = await Ticket.findById(req.params.id);
     if (!ticket) {
       return res.status(404).json({ msg: 'Ticket not found' });
     }
 
-    // If ticket is already assigned, only admin can reassign
     if (ticket.assignedTo && req.user.role !== 'admin') {
       return res.status(403).json({ msg: 'Ticket is already assigned. Only admin can reassign tickets.' });
     }
 
-    // For self-assignment (firstline/secondline support)
     if (req.user.role !== 'admin') {
-      // Verify it's actually self-assignment
       if (assignedTo !== req.user.id) {
         return res.status(403).json({ msg: 'Support staff can only self-assign tickets' });
       }
       
-      // Verify the support level matches the user's role
       if (supportLevel !== req.user.role) {
         return res.status(400).json({ msg: 'Support level must match your role' });
       }
     } else {
-      // For admin assignments, verify the assigned user exists and has the correct role
       const assignedUser = await User.findById(assignedTo);
       if (!assignedUser) {
         return res.status(404).json({ msg: 'Assigned user not found' });
@@ -427,7 +368,6 @@ exports.assignTicket = async (req, res) => {
       }
     }
 
-    // Update ticket with assignment and support level
     ticket = await Ticket.findByIdAndUpdate(
       req.params.id,
       { 

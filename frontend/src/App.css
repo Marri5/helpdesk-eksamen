@@ -1,19 +1,13 @@
-/* Global Styles will be handled by Tailwind */
-/* Most styles are commented out since we're using Tailwind CSS */
-
-/* Keep only essential styles that aren't covered by Tailwind */
 body {
   font-family: 'Raleway', sans-serif;
 }
 
-/* Landing Page */
 .landing {
   position: relative;
   background-color: #1F2937;
   height: 90vh;
 }
 
-/* Alerts wrapper for positioning */
 .alert-wrapper {
   position: fixed;
   top: 70px;
@@ -28,4 +22,3 @@ body {
   overflow-y: auto;
 }
 
-/* Any custom animations not in Tailwind can stay here */

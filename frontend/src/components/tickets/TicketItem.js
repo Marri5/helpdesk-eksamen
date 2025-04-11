@@ -32,19 +32,15 @@ const TicketItem = ({ ticket, showEscalate, onEscalate }) => {
     }
   };
 
-  // Calculate if there are unread responses (comments after user's last comment)
   const hasUnreadResponses = () => {
     if (!ticket.comments || ticket.comments.length === 0) return false;
     
-    // If there are no user comments, and there are support comments, show as unread
     const userComments = ticket.comments.filter(c => c.user._id === ticket.user._id);
     if (userComments.length === 0 && ticket.comments.length > 0) return true;
     
-    // Get the timestamp of user's last comment
     const lastUserComment = userComments[0]?.createdAt;
     if (!lastUserComment) return false;
     
-    // Check if there are any support comments after user's last comment
     return ticket.comments.some(c => 
       c.user._id !== ticket.user._id && 
       new Date(c.createdAt) > new Date(lastUserComment)

@@ -19,7 +19,6 @@ const Login = () => {
   useEffect(() => {
     setError(null);
     
-    // Check for existing cooldown
     const checkCooldown = () => {
       const storedCooldown = localStorage.getItem('loginCooldown');
       if (storedCooldown) {
@@ -78,7 +77,6 @@ const Login = () => {
 
     try {
       await login({ email, password });
-      // Successful login will trigger the useEffect to handle navigation
     } catch (err) {
       console.error('Login error:', err);
       const message = err.response?.data?.msg || 'Login failed. Please check your credentials.';

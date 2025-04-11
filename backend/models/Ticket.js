@@ -77,7 +77,6 @@ const TicketSchema = new mongoose.Schema({
   }
 });
 
-// Update the updatedAt timestamp before save
 TicketSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
